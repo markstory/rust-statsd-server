@@ -1,0 +1,7 @@
+[package]
+name = "statsd-server"
+version = "0.1.0"
+authors = ["Mark Story <mark@mark-story.com>"]
+
+[dependencies]
+docopt = "*"
