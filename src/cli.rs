@@ -5,9 +5,6 @@
 
 use docopt::Docopt;
 
-static DEFAULT_UDP_PORT: u16 = 8125;
-static DEFAULT_TCP_PORT: u16 = 8126;
-
 static USAGE: &'static str = "
 Usage: statsd [options]
        statsd --help
@@ -22,10 +19,10 @@ Options:
 /// Holds the parsed command line arguments
 #[derive(RustcDecodable, Debug)]
 pub struct Args {
-    flag_port: u16,
-    flag_admin_port: u16,
-    flag_console: bool,
-    flag_help: bool,
+    pub flag_port: u16,
+    pub flag_admin_port: u16,
+    pub flag_console: bool,
+    pub flag_help: bool,
 }
 
 pub fn parse_args() -> Args {
