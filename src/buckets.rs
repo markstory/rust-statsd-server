@@ -13,6 +13,10 @@ pub struct Buckets {
 
 impl Buckets {
     /// Create a new Buckets
+    ///
+    /// ```
+    /// let bucket = Buckets::new();
+    /// ```
     pub fn new() -> Buckets {
         Buckets {
             counters: HashMap::new(),
@@ -21,6 +25,17 @@ impl Buckets {
     }
 
     /// Adds a metric to the bucket storage.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use super::metric;
+    /// use std::str::FromStr;
+    ///
+    /// let metric = metric::Metric::FromStr("foo:1|c");
+    /// let mut bucket = Buckets::new();
+    /// bucket.add(metric);
+    /// ```
     pub fn add(&mut self, value: &Metric) {
         println!("{:?}", value);
         match value.kind {
