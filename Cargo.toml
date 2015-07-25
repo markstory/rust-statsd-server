@@ -6,3 +6,4 @@ authors = ["Mark Story <mark@mark-story.com>"]
 [dependencies]
 docopt = "*"
 rustc-serialize = "*"
+clock_ticks = "0.0.6"

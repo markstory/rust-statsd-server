@@ -41,7 +41,7 @@ pub struct Metric {
 }
 
 impl Metric {
-    fn new(name: &str, value: f64, kind: MetricKind) -> Metric {
+    pub fn new(name: &str, value: f64, kind: MetricKind) -> Metric {
         Metric{name: name.to_string(), value: value, kind: kind}
     }
 }

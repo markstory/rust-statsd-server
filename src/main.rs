@@ -1,5 +1,6 @@
 extern crate docopt;
 extern crate rustc_serialize;
+extern crate clock_ticks;
 
 use std::thread;
 use std::sync::mpsc::channel;
