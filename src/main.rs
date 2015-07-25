@@ -4,6 +4,7 @@ extern crate rustc_serialize;
 use std::thread;
 use std::sync::mpsc::channel;
 use std::str;
+use std::str::FromStr;
 
 
 // Local module imports.
@@ -23,8 +24,9 @@ mod backend {
 
 fn main() {
     let args = cli::parse_args();
-
     let (event_send, event_recv) = channel();
+
+    let mut buckets = buckets::Buckets::new();
 
     // Setup the UDP server which publishes events to the event channel
     thread::spawn(move || {
@@ -40,8 +42,18 @@ fn main() {
 
         match result {
             server::Event::UdpMessage(buf) => {
-                let msg = str::from_utf8(&buf).unwrap().to_string();
-                println!("{:?}", msg);
+                // Create the metric and push it into the buckets.
+                str::from_utf8(&buf).map(|val| {
+                    metric::Metric::from_str(&val)
+                    .and_then(|metric| {
+                        buckets.add(&metric);
+                        Ok(metric)
+                    })
+                    .or_else(|err| {
+                        buckets.add_bad_message();
+                        Err(err)
+                    }).ok();
+                }).ok();
             },
         }
     }

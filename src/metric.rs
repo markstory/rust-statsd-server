@@ -35,9 +35,9 @@ pub enum ParseError {
 ///
 #[derive(Debug)]
 pub struct Metric {
-    kind: MetricKind,
-    name: String,
-    value: f64
+    pub kind: MetricKind,
+    pub name: String,
+    pub value: f64
 }
 
 impl Metric {

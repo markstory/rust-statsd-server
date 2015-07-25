@@ -9,6 +9,8 @@ pub enum Event {
 }
 
 
+/// Setup the UDP socket that listens for metrics and
+/// publishes them into the bucket storage.
 pub fn udp_server(chan: Sender<Event>, port: u16) {
     let addr = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), port);
     let socket = UdpSocket::bind(addr).ok().unwrap();
