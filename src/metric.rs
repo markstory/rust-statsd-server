@@ -24,6 +24,7 @@ impl fmt::Debug for MetricKind {
 
 /// Error types for parsing Metrics from strings.
 ///
+#[derive(Debug)]
 pub enum ParseError {
     // Error message, column
     SyntaxError(&'static str, usize)
@@ -54,7 +55,9 @@ impl FromStr for Metric {
     /// - `<str:metric_name>:<f64:value>|c|@<f64:sample_rate>`
     fn from_str(line: &str) -> Result<Metric, ParseError> {
         // Get the metric name
-        let name_parts: Vec<&str> = line.split(':').collect();
+        let name_parts: Vec<&str> = line.trim_right_matches('\n')
+            .split(':')
+            .collect();
         if name_parts.len() < 2 || name_parts[0].is_empty() {
             return Err(ParseError::SyntaxError(
                     "Metrics require a name.",
@@ -136,6 +139,10 @@ mod test {
     #[test]
     fn test_metric_valid() {
         let mut valid = HashMap::new();
+        valid.insert(
+            "foo.test:12.3|ms\n",
+            Metric::new("foo.test", 12.3, MetricKind::Timer)
+        );
         valid.insert(
             "foo.test:12.3|ms",
             Metric::new("foo.test", 12.3, MetricKind::Timer)
