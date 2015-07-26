@@ -64,6 +64,7 @@ impl Buckets {
             },
         }
         self.last_message = clock_ticks::precise_time_ms();
+        self.total_messages += 1;
     }
 
     /// Increment the bad message count by one.
@@ -98,7 +99,7 @@ mod test {
     }
 
     #[test]
-    fn test_add_increments_last_message_timer() {
+    fn test_add_increments_total_messages() {
         let mut buckets = Buckets::new();
         // duff value to ensure it changes.
         let original = 10;
@@ -107,6 +108,17 @@ mod test {
         let metric = Metric::new("some.metric", 1.0, MetricKind::Counter(1.0));
         buckets.add(&metric);
         assert!(buckets.last_message > original);
+    }
+
+    #[test]
+    fn test_add_increments_last_message_timer() {
+        let mut buckets = Buckets::new();
+        let metric = Metric::new("some.metric", 1.0, MetricKind::Counter(1.0));
+        buckets.add(&metric);
+        assert_eq!(1, buckets.total_messages);
+
+        buckets.add(&metric);
+        assert_eq!(2, buckets.total_messages);
     }
 
     #[test]
