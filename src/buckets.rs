@@ -49,7 +49,6 @@ impl Buckets {
     /// bucket.add(metric);
     /// ```
     pub fn add(&mut self, value: &Metric) {
-        println!("{:?}", value);
         let name = value.name.to_owned();
         match value.kind {
             MetricKind::Counter(rate) => {
@@ -64,6 +63,7 @@ impl Buckets {
                 slot.push(value.value);
             },
         }
+        self.last_message = clock_ticks::precise_time_ms();
     }
 
     /// Increment the bad message count by one.
@@ -99,7 +99,14 @@ mod test {
 
     #[test]
     fn test_add_increments_last_message_timer() {
-        assert!(false, "Not done.");
+        let mut buckets = Buckets::new();
+        // duff value to ensure it changes.
+        let original = 10;
+        buckets.last_message = original;
+
+        let metric = Metric::new("some.metric", 1.0, MetricKind::Counter(1.0));
+        buckets.add(&metric);
+        assert!(buckets.last_message > original);
     }
 
     #[test]
@@ -119,7 +126,15 @@ mod test {
 
     #[test]
     fn test_add_counter_metric_sampled() {
-        assert!(false, "Not done");
+        let mut buckets = Buckets::new();
+        let metric = Metric::new("some.metric", 1.0, MetricKind::Counter(0.1));
+
+        buckets.add(&metric);
+        assert_eq!(Some(&10.0), buckets.counters.get("some.metric"));
+
+        let metric_two = Metric::new("some.metric", 1.0, MetricKind::Counter(0.5));
+        buckets.add(&metric_two);
+        assert_eq!(Some(&12.0), buckets.counters.get("some.metric"));
     }
 
     #[test]
