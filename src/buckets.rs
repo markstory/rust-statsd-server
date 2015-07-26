@@ -10,7 +10,7 @@ use clock_ticks;
 pub struct Buckets {
     counters: HashMap<String, f64>,
     gauges: HashMap<String, f64>,
-    timers: HashMap<String, f64>,
+    timers: HashMap<String, Vec<f64>>,
 
     server_start_time: u64,
     last_message: u64,
@@ -50,16 +50,18 @@ impl Buckets {
     /// ```
     pub fn add(&mut self, value: &Metric) {
         println!("{:?}", value);
+        let name = value.name.to_owned();
         match value.kind {
             MetricKind::Counter(rate) => {
-                // TODO handle sampling rate
-                self.counters.insert(value.name.to_owned(), value.value);
+                let counter = self.counters.entry(name).or_insert(0.0);
+                *counter = *counter + value.value * (1.0 / rate);
             },
             MetricKind::Gauge => {
-                self.gauges.insert(value.name.to_owned(), value.value);
+                self.gauges.insert(name, value.value);
             },
             MetricKind::Timer => {
-                self.timers.insert(value.name.to_owned(), value.value);
+                let slot = self.timers.entry(name).or_insert(Vec::new());
+                slot.push(value.value);
             },
         }
     }
@@ -96,8 +98,23 @@ mod test {
     }
 
     #[test]
+    fn test_add_increments_last_message_timer() {
+        assert!(false, "Not done.");
+    }
+
+    #[test]
     fn test_add_counter_metric() {
-        assert!(false, "Not done");
+        let mut buckets = Buckets::new();
+        let metric = Metric::new("some.metric", 1.0, MetricKind::Counter(1.0));
+        buckets.add(&metric);
+
+        assert!(buckets.counters.contains_key("some.metric"),
+                "Should contain the metric key");
+        assert_eq!(Some(&1.0), buckets.counters.get("some.metric"));
+
+        // Increment counter
+        buckets.add(&metric);
+        assert_eq!(Some(&2.0), buckets.counters.get("some.metric"));
     }
 
     #[test]
@@ -112,8 +129,7 @@ mod test {
         buckets.add(&metric);
         assert!(buckets.gauges.contains_key("some.metric"),
                 "Should contain the metric key");
-        // TODO assert value in hashmap is a list.
-        // TODO assert last_message time.
+        assert_eq!(Some(&11.5), buckets.gauges.get("some.metric"));
     }
 
     #[test]
@@ -123,5 +139,19 @@ mod test {
         buckets.add(&metric);
         assert!(buckets.timers.contains_key("some.metric"),
                 "Should contain the metric key");
+        assert_eq!(Some(&vec![11.5]), buckets.timers.get("some.metric"));
+
+        let metric_two = Metric::new("some.metric", 99.5, MetricKind::Timer);
+        buckets.add(&metric_two);
+
+        let metric_three = Metric::new("other.metric", 811.5, MetricKind::Timer);
+        buckets.add(&metric_three);
+        assert!(buckets.timers.contains_key("some.metric"),
+                "Should contain the metric key");
+        assert!(buckets.timers.contains_key("other.metric"),
+                "Should contain the metric key");
+
+        assert_eq!(Some(&vec![11.5, 99.5]), buckets.timers.get("some.metric"));
+        assert_eq!(Some(&vec![811.5]), buckets.timers.get("other.metric"));
     }
 }
