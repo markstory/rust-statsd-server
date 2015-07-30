@@ -1,11 +1,13 @@
 use std::sync::mpsc::Sender;
 use std::net::{Ipv4Addr, UdpSocket, SocketAddrV4};
+use std::thread::sleep_ms;
 
 
 /// Acceptable event types.
 ///
 pub enum Event {
-    UdpMessage(Vec<u8>)
+    UdpMessage(Vec<u8>),
+    TimerFlush
 }
 
 
@@ -22,5 +24,16 @@ pub fn udp_server(chan: Sender<Event>, port: u16) {
         };
         let bytes = Vec::from(&buf[..len]);
         chan.send(Event::UdpMessage(bytes)).unwrap();
+    }
+}
+
+
+/// Publishes an event on the channel every interval
+///
+/// This message is used to push data from the buckets to the backends.
+pub fn flush_timer_loop(chan: Sender<Event>, interval: u32) {
+    loop {
+        sleep_ms(interval * 1000);
+        chan.send(Event::TimerFlush).unwrap();
     }
 }
