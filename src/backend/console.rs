@@ -1,6 +1,7 @@
 use super::backend::Backend;
 use super::super::buckets::Buckets;
 
+#[derive(Debug)]
 pub struct Console {
     last_flush_time: u64,
     last_flush_length: u64

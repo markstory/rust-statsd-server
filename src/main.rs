@@ -27,7 +27,7 @@ mod backend {
 fn main() {
     let args = cli::parse_args();
 
-    let backends = backend::backend::factory(
+    let mut backends = backend::backend::factory(
         &args.flag_console,
         &args.flag_graphite);
 
@@ -58,7 +58,7 @@ fn main() {
 
         match result {
             server::Event::TimerFlush => {
-                for backend in backends.iter() {
+                for backend in backends.iter_mut() {
                     backend.flush_buckets(&buckets);
                 }
             },
