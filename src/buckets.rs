@@ -77,6 +77,16 @@ impl Buckets {
     pub fn bad_messages(&self) -> usize {
         self.bad_messages
     }
+
+    /// Get the counters as a borrowed reference.
+    pub fn counters(&self) -> &HashMap<String, f64> {
+        &self.counters
+    }
+
+    /// Get the gauges as a borrowed reference.
+    pub fn gauges(&self) -> &HashMap<String, f64> {
+        &self.gauges
+    }
 }
 
 
@@ -134,6 +144,8 @@ mod test {
         // Increment counter
         buckets.add(&metric);
         assert_eq!(Some(&2.0), buckets.counters.get("some.metric"));
+        assert_eq!(1, buckets.counters().len());
+        assert_eq!(0, buckets.gauges().len());
     }
 
     #[test]
@@ -157,6 +169,8 @@ mod test {
         assert!(buckets.gauges.contains_key("some.metric"),
                 "Should contain the metric key");
         assert_eq!(Some(&11.5), buckets.gauges.get("some.metric"));
+        assert_eq!(1, buckets.gauges().len());
+        assert_eq!(0, buckets.counters().len());
     }
 
     #[test]
