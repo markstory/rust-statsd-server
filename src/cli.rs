@@ -13,7 +13,7 @@ Options:
   -h, --help            Print help information.
   -p, --port=<p>        The UDP port to bind to [default: 8125].
   -a, --admin-port=<p>  The TCP port for the admin interface [default: 8126].
-  --flush-interval=<p>  How frequently to flush metrics to the backends in seconds. [default 10].
+  --flush-interval=<p>  How frequently to flush metrics to the backends in seconds. [default: 10].
   --console             Enable the console backend.
   --graphite            Enable the graphite backend.
 ";
