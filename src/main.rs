@@ -20,10 +20,6 @@ mod backend {
 }
 
 
-// Max Packet Size is 256.
-// static FLUSH_INTERVAL_MS: u64 = 10000;
-
-
 fn main() {
     let args = cli::parse_args();
 

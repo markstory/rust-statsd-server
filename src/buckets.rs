@@ -87,6 +87,11 @@ impl Buckets {
     pub fn gauges(&self) -> &HashMap<String, f64> {
         &self.gauges
     }
+
+    /// Get the timers as a borrowed reference.
+    pub fn timers(&self) -> &HashMap<String, Vec<f64>> {
+        &self.timers
+    }
 }
 
 
