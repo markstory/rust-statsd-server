@@ -1,12 +1,14 @@
+//! Buckets are the primary internal storage type.
+//!
+//! Each bucket contains a set of hashmaps containing
+//! each set of metrics received by clients.
+
 use std::collections::HashMap;
 use super::metric::{Metric, MetricKind};
 use clock_ticks;
 
-/// Buckets are the primary internal storage type.
-///
-/// Each bucket contains a set of hashmaps containing
-/// each set of metrics received by clients.
-///
+
+/// Buckets stores all metrics until they are flushed.
 pub struct Buckets {
     counters: HashMap<String, f64>,
     gauges: HashMap<String, f64>,
@@ -21,8 +23,12 @@ pub struct Buckets {
 impl Buckets {
     /// Create a new Buckets
     ///
+    ///
+    /// # Examples
+    ///
     /// ```
     /// let bucket = Buckets::new();
+    /// assert_eq!(0, bucket.counters().len());
     /// ```
     pub fn new() -> Buckets {
         Buckets {
@@ -41,6 +47,7 @@ impl Buckets {
     /// # Examples
     ///
     /// ```
+    /// use buckets::Buckets;
     /// use super::metric;
     /// use std::str::FromStr;
     ///
@@ -68,7 +75,6 @@ impl Buckets {
     }
 
     /// Increment the bad message count by one.
-    ///
     pub fn add_bad_message(&mut self) {
         self.bad_messages += 1
     }
