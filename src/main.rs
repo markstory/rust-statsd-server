@@ -57,7 +57,7 @@ fn main() {
                 for backend in backends.iter_mut() {
                     backend.flush_buckets(&buckets);
                 }
-                // TODO clear metrics out https://github.com/etsy/statsd/blob/master/stats.js#L104-L153
+                buckets.reset();
             },
 
             server::Event::UdpMessage(buf) => {

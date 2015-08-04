@@ -101,8 +101,24 @@ impl Buckets {
         &self.timers
     }
 
+    /// Get the total number of messages this bucket has seen
+    /// (includes bad messages).
     pub fn total_messages(&self) -> usize {
         self.total_messages
+    }
+
+    /// Resets the counters and timers to 0.
+    /// Gauge values are preserved. This emulates the
+    /// behavior of etsy/statsd with default configuration options.
+    pub fn reset(&mut self) {
+        for (_, value) in self.counters.iter_mut() {
+            *value = 0.0;
+        }
+        for (_, value) in self.timers.iter_mut() {
+            *value = Vec::new();
+        }
+        self.bad_messages = 0;
+        self.total_messages = 0;
     }
 }
 
@@ -216,5 +232,26 @@ mod test {
 
         assert_eq!(Some(&vec![11.5, 99.5]), buckets.timers.get("some.metric"));
         assert_eq!(Some(&vec![811.5]), buckets.timers.get("other.metric"));
+    }
+
+    #[test]
+    fn test_reset_metrics() {
+        let mut buckets = Buckets::new();
+        buckets.add(&Metric::new("some.timer", 11.5, MetricKind::Timer));
+        buckets.add(&Metric::new("some.counter", 14.9, MetricKind::Counter(1.0)));
+        buckets.add(&Metric::new("some.gauge", 0.9, MetricKind::Gauge));
+
+        buckets.reset();
+        assert!(buckets.timers.contains_key("some.timer"));
+        assert_eq!(Some(&vec![]), buckets.timers.get("some.timer"));
+
+        assert!(buckets.counters.contains_key("some.counter"));
+        assert_eq!(Some(&0.0), buckets.counters.get("some.counter"));
+
+        assert!(buckets.gauges.contains_key("some.gauge"));
+        assert_eq!(Some(&0.9), buckets.gauges.get("some.gauge"));
+
+        assert_eq!(0, buckets.total_messages);
+        assert_eq!(0, buckets.bad_messages);
     }
 }
