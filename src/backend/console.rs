@@ -40,6 +40,9 @@ impl Backend for Console {
         println!("Flushing metrics: {}",
                  time::at(now).rfc822().to_string());
 
+        println!("  bad_messages: {}", buckets.bad_messages());
+        println!("  total_messages: {}", buckets.total_messages());
+
         println!("  counters:");
         for (key, value) in buckets.counters().iter() {
             fmt_line(&key, &value);
