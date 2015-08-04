@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 use super::metric::{Metric, MetricKind};
-use clock_ticks;
+use time;
 
 
 /// Buckets stores all metrics until they are flushed.
@@ -14,8 +14,8 @@ pub struct Buckets {
     gauges: HashMap<String, f64>,
     timers: HashMap<String, Vec<f64>>,
 
-    server_start_time: u64,
-    last_message: u64,
+    server_start_time: time::Timespec,
+    last_message: time::Timespec,
     bad_messages: usize,
     total_messages: usize,
 }
@@ -37,8 +37,8 @@ impl Buckets {
             timers: HashMap::new(),
             bad_messages: 0,
             total_messages: 0,
-            last_message: clock_ticks::precise_time_ms(),
-            server_start_time: clock_ticks::precise_time_ms(),
+            last_message: time::get_time(),
+            server_start_time: time::get_time(),
         }
     }
 
@@ -70,12 +70,14 @@ impl Buckets {
                 slot.push(value.value);
             },
         }
-        self.last_message = clock_ticks::precise_time_ms();
+        self.last_message = time::get_time();
         self.total_messages += 1;
     }
 
     /// Increment the bad message count by one.
+    /// Also increments tht total message count.
     pub fn add_bad_message(&mut self) {
+        self.total_messages += 1;
         self.bad_messages += 1
     }
 
@@ -98,6 +100,10 @@ impl Buckets {
     pub fn timers(&self) -> &HashMap<String, Vec<f64>> {
         &self.timers
     }
+
+    pub fn total_messages(&self) -> usize {
+        self.total_messages
+    }
 }
 
 
@@ -108,22 +114,27 @@ impl Buckets {
 mod test {
     use super::*;
     use super::super::metric::{Metric, MetricKind};
+    use time;
 
     #[test]
     fn test_bad_messages() {
         let mut buckets = Buckets::new();
         buckets.add_bad_message();
         assert_eq!(1, buckets.bad_messages());
+        assert_eq!(1, buckets.total_messages());
 
         buckets.add_bad_message();
         assert_eq!(2, buckets.bad_messages());
+        assert_eq!(2, buckets.total_messages());
     }
 
     #[test]
     fn test_add_increments_total_messages() {
         let mut buckets = Buckets::new();
         // duff value to ensure it changes.
-        let original = 10;
+        let original = time::strptime("2015-08-03 19:50:12", "%Y-%m-%d %H:%M:%S")
+            .unwrap()
+            .to_timespec();
         buckets.last_message = original;
 
         let metric = Metric::new("some.metric", 1.0, MetricKind::Counter(1.0));

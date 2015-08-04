@@ -1,6 +1,6 @@
 use super::backend::Backend;
 use super::super::buckets::Buckets;
-use clock_ticks;
+use time;
 
 #[derive(Debug)]
 pub struct Console {
@@ -34,10 +34,11 @@ fn fmt_line(key: &str, value: &f64) {
 }
 
 
-
 impl Backend for Console {
     fn flush_buckets(&mut self, buckets: &Buckets) {
-        println!("{}:", clock_ticks::precise_time_ms());
+        let now = time::get_time();
+        println!("Flushing metrics: {}",
+                 time::at(now).rfc822().to_string());
 
         println!("  counters:");
         for (key, value) in buckets.counters().iter() {
@@ -49,26 +50,9 @@ impl Backend for Console {
             fmt_line(&key, &value);
         }
 
-        /*
         println!("  timers:");
         for (key, values) in buckets.timers().iter() {
-            let samples: &[f64] = values.as_slice();
-
-            println!("    {key}:
-       min: {min}
-       max: {max}
-       count: {count}
-       mean: {mean}
-       stddev: {std}
-       upper_95: {max_threshold}",
-                  key=*key,
-                  min=samples.min(),
-                  max=samples.max(),
-                  count=samples.len(),
-                  mean=samples.mean(),
-                  std=samples.std_dev(),
-                  max_threshold=samples.percentile(95.0));
+            println!("    {}: {:?}", key, values);
         }
-        */
     }
 }
