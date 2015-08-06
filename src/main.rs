@@ -15,6 +15,7 @@ mod cli;
 mod server;
 mod buckets;
 mod backend;
+mod metric_processor;
 mod backends {
     pub mod console;
 }
@@ -54,6 +55,7 @@ fn main() {
 
         match result {
             server::Event::TimerFlush => {
+                buckets.process();
                 for backend in backends.iter_mut() {
                     backend.flush_buckets(&buckets);
                 }

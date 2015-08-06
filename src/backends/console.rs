@@ -57,5 +57,10 @@ impl Backend for Console {
         for (key, values) in buckets.timers().iter() {
             println!("    {}: {:?}", key, values);
         }
+
+        println!("  timer_data:");
+        for (key, values) in buckets.timer_data().iter() {
+            println!("    {}: {:?}", key, values);
+        }
     }
 }

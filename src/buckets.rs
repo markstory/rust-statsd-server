@@ -5,6 +5,7 @@
 
 use std::collections::HashMap;
 use super::metric::{Metric, MetricKind};
+use super::metric_processor;
 use time;
 
 
@@ -13,6 +14,7 @@ pub struct Buckets {
     counters: HashMap<String, f64>,
     gauges: HashMap<String, f64>,
     timers: HashMap<String, Vec<f64>>,
+    timer_data: HashMap<String, HashMap<String, f64>>,
 
     server_start_time: time::Timespec,
     last_message: time::Timespec,
@@ -35,6 +37,7 @@ impl Buckets {
             counters: HashMap::new(),
             gauges: HashMap::new(),
             timers: HashMap::new(),
+            timer_data: HashMap::new(),
             bad_messages: 0,
             total_messages: 0,
             last_message: time::get_time(),
@@ -101,6 +104,11 @@ impl Buckets {
         &self.timers
     }
 
+    /// Get the timers as a borrowed reference.
+    pub fn timer_data(&self) -> &HashMap<String, HashMap<String, f64>> {
+        &self.timer_data
+    }
+
     /// Get the total number of messages this bucket has seen
     /// (includes bad messages).
     pub fn total_messages(&self) -> usize {
@@ -119,6 +127,11 @@ impl Buckets {
         }
         self.bad_messages = 0;
         self.total_messages = 0;
+    }
+
+    /// Processes metrics adding in derived values.
+    pub fn process(&mut self) {
+        metric_processor::process(self)
     }
 }
 
