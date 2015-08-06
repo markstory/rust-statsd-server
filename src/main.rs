@@ -6,7 +6,7 @@ use std::thread;
 use std::sync::mpsc::channel;
 use std::str;
 use std::str::FromStr;
-use backend::backend::Backend;
+use backend::Backend;
 
 
 // Local module imports.
@@ -14,8 +14,8 @@ mod metric;
 mod cli;
 mod server;
 mod buckets;
-mod backend {
-    pub mod backend;
+mod backend;
+mod backends {
     pub mod console;
 }
 
@@ -23,7 +23,7 @@ mod backend {
 fn main() {
     let args = cli::parse_args();
 
-    let mut backends = backend::backend::factory(
+    let mut backends = backend::factory(
         &args.flag_console,
         &args.flag_graphite);
 

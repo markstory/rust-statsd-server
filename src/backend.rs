@@ -1,5 +1,5 @@
 use buckets::Buckets;
-use super::console;
+use backends::console;
 
 /// Defines the interface that backends use to publish
 /// metrics to their storage system.
