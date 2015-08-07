@@ -14,7 +14,8 @@ pub struct Buckets {
     counters: HashMap<String, f64>,
     gauges: HashMap<String, f64>,
     timers: HashMap<String, Vec<f64>>,
-    timer_data: HashMap<String, HashMap<String, f64>>,
+
+    timer_data: HashMap<String, f64>,
 
     server_start_time: time::Timespec,
     last_message: time::Timespec,
@@ -104,9 +105,14 @@ impl Buckets {
         &self.timers
     }
 
-    /// Get the timers as a borrowed reference.
-    pub fn timer_data(&self) -> &HashMap<String, HashMap<String, f64>> {
+    /// Get the calculated timer data as a borrowed reference.
+    pub fn timer_data(&self) -> &HashMap<String, f64> {
         &self.timer_data
+    }
+
+    /// Replace the calculated timer data with a new hash map.
+    pub fn set_timer_data(&mut self, data: HashMap<String, f64>) {
+        self.timer_data = data;
     }
 
     /// Get the total number of messages this bucket has seen
