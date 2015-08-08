@@ -31,11 +31,16 @@ pub fn process(buckets: &mut Buckets) {
             v[mid]
         };
 
+        // Get population standard deviation
+        let sum_diff = v.iter().fold(0.0, |sum, x| sum + (x - mean).powi(2));
+        let stddev = (sum_diff / len).sqrt();
+
         timer_data.insert(format!("{}.min", key), v[0]);
         timer_data.insert(format!("{}.max", key), v[v.len() - 1]);
         timer_data.insert(format!("{}.count", key), len);
         timer_data.insert(format!("{}.mean", key), mean);
         timer_data.insert(format!("{}.median", key), median);
+        timer_data.insert(format!("{}.stddev", key), stddev);
     }
     buckets.set_timer_data(timer_data);
 
@@ -90,6 +95,9 @@ mod test {
         assert_float(
             "22.900",
             buckets.timer_data().get("some.timer.median").unwrap());
+        assert_float(
+            "11.124",
+            buckets.timer_data().get("some.timer.stddev").unwrap());
     }
 
     #[test]
