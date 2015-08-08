@@ -20,8 +20,22 @@ pub fn process(buckets: &mut Buckets) {
         let mut v = values.clone();
         v.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
+        let len = v.len() as f64;
+        let sum = v.iter().fold(0.0, |sum, x| sum + x);
+        let mean = sum / len;
+
+        let mid = (len / 2.0).floor() as usize;
+        let median = if (v.len() % 2) == 0 {
+            (v[mid - 1] + v[mid + 1]) / 2.0
+        } else {
+            v[mid]
+        };
+
         timer_data.insert(format!("{}.min", key), v[0]);
         timer_data.insert(format!("{}.max", key), v[v.len() - 1]);
+        timer_data.insert(format!("{}.count", key), len);
+        timer_data.insert(format!("{}.mean", key), mean);
+        timer_data.insert(format!("{}.median", key), median);
     }
     buckets.set_timer_data(timer_data);
 
@@ -34,11 +48,13 @@ pub fn process(buckets: &mut Buckets) {
 }
 
 
+
 #[cfg(test)]
 mod test {
     use super::*;
     use super::super::buckets::Buckets;
     use super::super::metric::{Metric, MetricKind};
+    use std::option::Option;
     use time;
 
     fn make_buckets() -> Buckets {
@@ -56,6 +72,10 @@ mod test {
         buckets
     }
 
+    fn assert_float(expected: &str, value: &f64) {
+        assert_eq!(expected, format!("{:.*}", 3, value));
+    }
+
     #[test]
     fn test_process_timer_data() {
         let mut buckets = make_buckets();
@@ -63,6 +83,13 @@ mod test {
 
         assert_eq!(Some(&3.4), buckets.timer_data().get("some.timer.min"));
         assert_eq!(Some(&33.7), buckets.timer_data().get("some.timer.max"));
+        assert_eq!(Some(&4.0), buckets.timer_data().get("some.timer.count"));
+        assert_float(
+            "15.575",
+            buckets.timer_data().get("some.timer.mean").unwrap());
+        assert_float(
+            "22.900",
+            buckets.timer_data().get("some.timer.median").unwrap());
     }
 
     #[test]
