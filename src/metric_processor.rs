@@ -24,16 +24,12 @@ pub fn process(buckets: &mut Buckets) {
         let sum = v.iter().fold(0.0, |sum, x| sum + x);
         let mean = sum / len;
 
-        let mid = (len / 2.0).floor() as usize;
-        let median = if (v.len() % 2) == 0 {
-            (v[mid - 1] + v[mid + 1]) / 2.0
-        } else {
-            v[mid]
-        };
-
         // Get population standard deviation
         let sum_diff = v.iter().fold(0.0, |sum, x| sum + (x - mean).powi(2));
         let stddev = (sum_diff / len).sqrt();
+
+        let median = percentile(&v, 0.5);
+        let upper_95 = percentile(&v, 0.95);
 
         timer_data.insert(format!("{}.min", key), v[0]);
         timer_data.insert(format!("{}.max", key), v[v.len() - 1]);
@@ -41,6 +37,7 @@ pub fn process(buckets: &mut Buckets) {
         timer_data.insert(format!("{}.mean", key), mean);
         timer_data.insert(format!("{}.median", key), median);
         timer_data.insert(format!("{}.stddev", key), stddev);
+        timer_data.insert(format!("{}.upper_95", key), upper_95);
     }
     buckets.set_timer_data(timer_data);
 
@@ -50,6 +47,16 @@ pub fn process(buckets: &mut Buckets) {
         duration.num_milliseconds() as f64,
         MetricKind::Counter(1.0));
     buckets.add(&process_duration);
+}
+
+fn percentile(values :&Vec<f64>, tile: f64) -> f64 {
+    let len = values.len() as f64;
+    let index = (len * tile) as usize;
+    if (values.len() % 2) == 0 {
+        return (values[index - 1] + values[index]) / 2.0;
+    } else {
+        return values[index];
+    }
 }
 
 
@@ -93,11 +100,14 @@ mod test {
             "15.575",
             buckets.timer_data().get("some.timer.mean").unwrap());
         assert_float(
-            "22.900",
+            "12.600",
             buckets.timer_data().get("some.timer.median").unwrap());
         assert_float(
             "11.124",
             buckets.timer_data().get("some.timer.stddev").unwrap());
+        assert_float(
+            "23.400",
+            buckets.timer_data().get("some.timer.upper_95").unwrap());
     }
 
     #[test]
