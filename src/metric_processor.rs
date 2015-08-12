@@ -49,6 +49,10 @@ pub fn process(buckets: &mut Buckets) {
     buckets.add(&process_duration);
 }
 
+
+/// Extract the value at the given percentile.
+/// If vector has an even length, two values will be
+/// averaged together.
 fn percentile(values :&Vec<f64>, tile: f64) -> f64 {
     let len = values.len() as f64;
     let index = (len * tile) as usize;
