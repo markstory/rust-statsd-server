@@ -1,7 +1,6 @@
 use super::buckets::Buckets;
 use super::metric::{Metric, MetricKind};
 use std::collections::HashMap;
-use std::cmp::Ordering;
 use time;
 
 /// Creates derived values from metric data.
@@ -70,8 +69,6 @@ mod test {
     use super::*;
     use super::super::buckets::Buckets;
     use super::super::metric::{Metric, MetricKind};
-    use std::option::Option;
-    use time;
 
     fn make_buckets() -> Buckets {
         let mut buckets = Buckets::new();
@@ -116,5 +113,9 @@ mod test {
 
     #[test]
     fn test_set_internal_metrics() {
+        let mut buckets = make_buckets();
+        process(&mut buckets);
+
+        assert_eq!(Some(&0.0), buckets.counters().get("statsd.processing_time"));
     }
 }
