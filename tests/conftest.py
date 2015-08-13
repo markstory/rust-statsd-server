@@ -35,6 +35,7 @@ def client():
     sock = socket.socket(
         socket.AF_INET,
         socket.SOCK_DGRAM)
+    sock.connect((host, port))
     def send(msg):
-        sock.sendto(msg, (host, port))
+        sock.sendall(msg)
     return send
