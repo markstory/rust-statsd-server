@@ -121,6 +121,11 @@ impl Buckets {
         self.total_messages
     }
 
+    /// Get the initialization time of the buckets.
+    pub fn start_time(&self) -> time::Timespec {
+        self.server_start_time
+    }
+
     /// Resets the counters and timers to 0.
     /// Gauge values are preserved. This emulates the
     /// behavior of etsy/statsd with default configuration options.

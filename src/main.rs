@@ -46,6 +46,9 @@ fn main() {
         server::flush_timer_loop(flush_send, flush_interval);
     });
 
+    println!("Starting statsd - {}",
+             time::at(buckets.start_time()).rfc822().to_string());
+
     // Main event loop.
     loop {
         let result = match event_recv.recv() {
@@ -63,6 +66,7 @@ fn main() {
             },
 
             server::Event::UdpMessage(buf) => {
+                println!("{}", str::from_utf8(&buf).unwrap());
                 // Create the metric and push it into the buckets.
                 str::from_utf8(&buf).map(|val| {
                     metric::Metric::from_str(&val)
