@@ -16,6 +16,8 @@ Options:
   --flush-interval=<p>  How frequently to flush metrics to the backends in seconds. [default: 10].
   --console             Enable the console backend.
   --graphite            Enable the graphite backend.
+  --graphite-port=<p>   The port graphite/carbon is running on [default: 2003].
+  --graphite-host=<p>   The host graphite/carbon is running on [default: 127.0.0.1]
 ";
 
 /// Holds the parsed command line arguments
@@ -26,6 +28,8 @@ pub struct Args {
     pub flag_flush_interval: u32,
     pub flag_console: bool,
     pub flag_graphite: bool,
+    pub flag_graphite_port: u32,
+    pub flag_graphite_host: String,
     pub flag_help: bool,
 }
 
