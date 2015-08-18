@@ -18,6 +18,7 @@ mod backend;
 mod metric_processor;
 mod backends {
     pub mod console;
+    pub mod graphite;
 }
 
 
@@ -26,7 +27,9 @@ fn main() {
 
     let mut backends = backend::factory(
         &args.flag_console,
-        &args.flag_graphite);
+        &args.flag_graphite,
+        &args.flag_graphite_host,
+        &args.flag_graphite_port);
 
     let (event_send, event_recv) = channel();
     let flush_send = event_send.clone();

@@ -10,9 +10,7 @@ pub struct Console {
 
 
 impl Console {
-    /// Create a Console formatter bound to any implementation
-    /// of `std::io::Write`. The writer will be wrapped in a
-    /// BufWriter.
+    /// Create a Console formatter that prints to stdout
     ///
     /// # Examples
     ///
