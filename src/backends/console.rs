@@ -3,10 +3,7 @@ use super::super::buckets::Buckets;
 use time;
 
 #[derive(Debug)]
-pub struct Console {
-    last_flush_time: u64,
-    last_flush_length: u64
-}
+pub struct Console;
 
 
 impl Console {
@@ -18,10 +15,7 @@ impl Console {
     /// let cons = Console::new();
     /// ```
     pub fn new() -> Console {
-        Console {
-            last_flush_time: 0,
-            last_flush_length: 0,
-        }
+        Console
     }
 
 }
