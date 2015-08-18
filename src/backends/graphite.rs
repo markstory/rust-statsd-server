@@ -30,16 +30,6 @@ impl Graphite {
             last_flush_length: 0,
         }
     }
-
-    /// Get the port graphite is on.
-    pub fn port(&self) -> u16 {
-        self.addr.port()
-    }
-
-    /// Get the host graphite is on.
-    pub fn host(&self) -> &Ipv4Addr {
-        self.addr.ip()
-    }
 }
 
 
