@@ -69,7 +69,6 @@ fn main() {
             },
 
             server::Event::UdpMessage(buf) => {
-                println!("{}", str::from_utf8(&buf).unwrap());
                 // Create the metric and push it into the buckets.
                 str::from_utf8(&buf).map(|val| {
                     metric::Metric::from_str(&val)
