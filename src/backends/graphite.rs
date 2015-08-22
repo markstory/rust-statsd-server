@@ -32,11 +32,10 @@ impl Graphite {
             last_flush_length: 0,
         }
     }
-}
 
-
-impl Backend for Graphite {
-    fn flush_buckets(&mut self, buckets: &Buckets) {
+    /// Convert the buckets into a String that
+    /// can be sent to graphite's newline API
+    pub fn format_stats(&self, buckets: &Buckets) -> String {
         let start = time::get_time().sec;
         let mut stats = String::new();
 
@@ -80,8 +79,55 @@ impl Backend for Graphite {
                 value,
                 start).unwrap();
         }
+        stats
+    }
+}
+
+
+impl Backend for Graphite {
+    fn flush_buckets(&mut self, buckets: &Buckets) {
+        let stats = self.format_stats(&buckets);
 
         let mut stream = TcpStream::connect(self.addr).unwrap();
         let _ = stream.write(stats.as_bytes());
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::super::super::metric::{Metric, MetricKind};
+    use super::super::super::buckets::Buckets;
+    use super::super::super::metric_processor::process;
+    use super::*;
+
+    fn make_buckets() -> Buckets {
+        let mut buckets = Buckets::new();
+        let m1 = Metric::new("test.counter", 1.0, MetricKind::Counter(1.0));
+        let m2 = Metric::new("test.gauge", 3.211, MetricKind::Gauge);
+
+        let m3 = Metric::new("test.timer", 12.101, MetricKind::Timer);
+        let m4 = Metric::new("test.timer", 1.101, MetricKind::Timer);
+        let m5 = Metric::new("test.timer", 3.101, MetricKind::Timer);
+        buckets.add(&m1);
+        buckets.add(&m2);
+        buckets.add(&m3);
+        buckets.add(&m4);
+        buckets.add(&m5);
+        buckets
+    }
+
+    #[test]
+    fn test_format_buckets_no_timers() {
+        let buckets = make_buckets();
+        let graphite = Graphite::new("127.0.0.1", 2003);
+        let result = graphite.format_stats(&buckets);
+        let mut lines: Vec<&str> = result.lines().collect();
+
+        assert_eq!(4, lines.len());
+        assert!(lines[0].contains("statsd.bad_messages 0"));
+        assert!(lines[1].contains("statsd.total_messages 5"));
+        assert!(lines[2].contains("test.counter 1"));
+        assert!(lines[3].contains("test.gauge 3.211"));
     }
 }
