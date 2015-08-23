@@ -1,8 +1,18 @@
-.PHONY: test test_unit test_integration
+.PHONY: install test test_unit test_integration
 
 ENV=env
 PIP=$(ENV)/bin/pip
 PYTEST=$(ENV)/bin/py.test
+
+dist:
+	mkdir -p dist
+
+target/release/statsd: src/*.rs
+	cargo build --release
+
+install: dist target/release/statsd
+	mv target/release/statsd dist/
+
 
 target/debug:
 	mkdir -p target/debug
