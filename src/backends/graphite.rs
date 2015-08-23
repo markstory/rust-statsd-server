@@ -130,4 +130,20 @@ mod test {
         assert!(lines[2].contains("test.counter 1"));
         assert!(lines[3].contains("test.gauge 3.211"));
     }
+
+    #[test]
+    fn test_format_buckets_timers() {
+        let mut buckets = make_buckets();
+        process(&mut buckets);
+
+        let graphite = Graphite::new("127.0.0.1", 2003);
+        let result = graphite.format_stats(&buckets);
+        let mut lines: Vec<&str> = result.lines().collect();
+
+        assert_eq!(12, lines.len());
+
+        assert!(result.contains("test.timer.max 12.101"));
+        assert!(result.contains("test.timer.min 1.101"));
+        assert!(result.contains("test.timer.count 3"));
+    }
 }
