@@ -53,6 +53,9 @@ impl FromStr for Metric {
     ///
     /// - `<str:metric_name>:<f64:value>|<str:type>`
     /// - `<str:metric_name>:<f64:value>|c|@<f64:sample_rate>`
+    ///
+    /// This does not yet support batch metrics. Right now each UDP packet
+    /// can only contain a single metric.
     fn from_str(line: &str) -> Result<Metric, ParseError> {
         // Get the metric name
         let name_parts: Vec<&str> = line.trim_right_matches('\n')
