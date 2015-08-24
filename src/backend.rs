@@ -34,9 +34,7 @@ pub fn factory(
 
 #[cfg(test)]
 mod test {
-    use std::boxed;
     use super::*;
-    use super::super::backends::graphite;
 
     #[test]
     fn factory_makes_graphite() {

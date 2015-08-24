@@ -25,7 +25,7 @@ $(ENV):
 	$(PIP) install -r tests/requirements.txt
 
 
-test: unit_test test_integration
+test: test_unit test_integration
 
 test_unit:
 	cargo test

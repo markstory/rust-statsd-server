@@ -122,7 +122,7 @@ mod test {
         let buckets = make_buckets();
         let graphite = Graphite::new("127.0.0.1", 2003);
         let result = graphite.format_stats(&buckets);
-        let mut lines: Vec<&str> = result.lines().collect();
+        let lines: Vec<&str> = result.lines().collect();
 
         assert_eq!(4, lines.len());
         assert!(lines[0].contains("statsd.bad_messages 0"));
@@ -138,7 +138,7 @@ mod test {
 
         let graphite = Graphite::new("127.0.0.1", 2003);
         let result = graphite.format_stats(&buckets);
-        let mut lines: Vec<&str> = result.lines().collect();
+        let lines: Vec<&str> = result.lines().collect();
 
         assert_eq!(12, lines.len());
 
