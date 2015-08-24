@@ -1,12 +1,14 @@
 use std::sync::mpsc::Sender;
-use std::net::{Ipv4Addr, UdpSocket, SocketAddrV4};
+use std::net::{Ipv4Addr, TcpStream, UdpSocket, SocketAddrV4};
 use std::thread::sleep_ms;
+use std::io::Read;
 
 
 /// Acceptable event types.
 ///
 pub enum Event {
     UdpMessage(Vec<u8>),
+    TcpMessage(Vec<u8>),
     TimerFlush
 }
 
@@ -24,6 +26,20 @@ pub fn udp_server(chan: Sender<Event>, port: u16) {
         };
         let bytes = Vec::from(&buf[..len]);
         chan.send(Event::UdpMessage(bytes)).unwrap();
+    }
+}
+
+/// Setup the TCP socket that listens for management commands.
+pub fn admin_server(chan: Sender<Event>, port: u16, host: &str) {
+    let mut stream = TcpStream::connect((host, port)).unwrap();
+    let mut buf = [0; 256];
+    loop {
+        let len = match stream.read(&mut buf) {
+            Ok(r) => r,
+            Err(_) => panic!("Could not read TCP stream."),
+        };
+        let bytes = Vec::from(&buf[..len]);
+        chan.send(Event::TcpMessage(bytes)).unwrap();
     }
 }
 

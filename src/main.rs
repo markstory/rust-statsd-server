@@ -34,6 +34,7 @@ fn main() {
     let (event_send, event_recv) = channel();
     let flush_send = event_send.clone();
     let udp_send = event_send.clone();
+    let tcp_send = event_send.clone();
 
     let mut buckets = buckets::Buckets::new();
 
@@ -41,6 +42,13 @@ fn main() {
     let port = args.flag_port;
     thread::spawn(move || {
         server::udp_server(udp_send, port);
+    });
+
+    // Setup the TCP server for administration
+    let tcp_port = args.flag_admin_port;
+    let tcp_host = args.flag_admin_host;
+    thread::spawn(move || {
+        server::admin_server(tcp_send, tcp_port, &tcp_host);
     });
 
     // Run the timer that flushes metrics to the backends.
@@ -80,6 +88,12 @@ fn main() {
                         buckets.add_bad_message();
                         Err(err)
                     }).ok();
+                }).ok();
+            },
+
+            server::Event::TcpMessage(buf) => {
+                str::from_utf8(&buf).map(|val| {
+                    println!("{}", val);
                 }).ok();
             },
         }
