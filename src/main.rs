@@ -15,6 +15,7 @@ mod cli;
 mod server;
 mod buckets;
 mod backend;
+mod management;
 mod metric_processor;
 mod backends {
     pub mod console;
@@ -91,10 +92,8 @@ fn main() {
                 }).ok();
             },
 
-            server::Event::TcpMessage(buf) => {
-                str::from_utf8(&buf).map(|val| {
-                    println!("{}", val);
-                }).ok();
+            server::Event::TcpMessage(stream) => {
+                management::exec(stream, &mut buckets);
             },
         }
     }
