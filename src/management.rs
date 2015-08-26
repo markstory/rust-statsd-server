@@ -1,6 +1,8 @@
 use buckets::Buckets;
+use time;
 use std::net::TcpStream;
 use std::io::{BufReader, BufRead, Write};
+use std::fmt::Write as fmtWrite;
 
 
 /// Handle the management commands
@@ -33,9 +35,16 @@ pub fn exec(stream: TcpStream, buckets: &Buckets) {
                 help.push_str("quit     - close this connection.\n");
                 let _ = writer.write(&help.as_bytes());
             },
-            /*
             "stats" => {
+                let mut out = String::new();
+                let uptime = (time::get_time() - buckets.start_time()).num_seconds();
+                write!(out, "uptime: {} seconds\n", uptime).unwrap();
+                write!(out, "bad_messages: {}\n", buckets.bad_messages()).unwrap();
+                write!(out, "total_messages: {}\n", buckets.total_messages()).unwrap();
+
+                let _ = writer.write(&out.as_bytes());
             },
+            /*
             "counters" => {
             }
             "gauges" => {
@@ -49,7 +58,7 @@ pub fn exec(stream: TcpStream, buckets: &Buckets) {
                 done = true
             }
             x => {
-                let out = format!("ERROR - unknown command `{}`", x);
+                let out = format!("ERROR - unknown command `{}`\n", x);
                 let _ = writer.write(&out.as_bytes());
             }
         }

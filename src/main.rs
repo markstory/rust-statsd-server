@@ -39,6 +39,11 @@ fn main() {
 
     let mut buckets = buckets::Buckets::new();
 
+    println!("Starting statsd - {}",
+             time::at(buckets.start_time()).rfc822().to_string());
+    println!("Data server on 0.0.0.0:{}", args.flag_port);
+    println!("Admin server on {}:{}", args.flag_admin_host, args.flag_admin_port);
+
     // Setup the UDP server which publishes events to the event channel
     let port = args.flag_port;
     thread::spawn(move || {
@@ -57,9 +62,6 @@ fn main() {
     thread::spawn(move || {
         server::flush_timer_loop(flush_send, flush_interval);
     });
-
-    println!("Starting statsd - {}",
-             time::at(buckets.start_time()).rfc822().to_string());
 
     // Main event loop.
     loop {
