@@ -19,49 +19,55 @@ pub fn exec(stream: TcpStream, buckets: &Buckets) {
             .unwrap_or("")
             .to_lowercase();
         let mut writer = reader.get_mut();
+        let mut out = String::new();
 
         // Trigger Deref<Target = str>
         match &*command {
             "help" => {
-                let mut help = String::new();
-                help.push_str("Statsd Admin Console:\n");
-                help.push_str("\n");
-                help.push_str("Available commands:\n");
-                help.push_str("stats    - print server stats.\n");
-                help.push_str("counters - print counter data.\n");
-                help.push_str("gauges   - print gauge data.\n");
-                help.push_str("timers   - print timer data.\n");
-                help.push_str("clear    - clear stored metrics.\n");
-                help.push_str("quit     - close this connection.\n");
-                let _ = writer.write(&help.as_bytes());
+                out.push_str("Statsd Admin Console:\n");
+                out.push_str("\n");
+                out.push_str("Available commands:\n");
+                out.push_str("stats    - print server stats.\n");
+                out.push_str("counters - print counter data.\n");
+                out.push_str("gauges   - print gauge data.\n");
+                out.push_str("timers   - print timer data.\n");
+                out.push_str("clear    - clear stored metrics.\n");
+                out.push_str("quit     - close this connection.\n");
             },
             "stats" => {
-                let mut out = String::new();
                 let uptime = (time::get_time() - buckets.start_time()).num_seconds();
                 write!(out, "uptime: {} seconds\n", uptime).unwrap();
                 write!(out, "bad_messages: {}\n", buckets.bad_messages()).unwrap();
                 write!(out, "total_messages: {}\n", buckets.total_messages()).unwrap();
-
-                let _ = writer.write(&out.as_bytes());
+                write!(out, "END\n\n").unwrap();
             },
-            /*
             "counters" => {
-            }
+                for (key, value) in buckets.counters().iter() {
+                    write!(out, " {}: {}\n", key, value).unwrap();
+                }
+                write!(out, "END\n\n").unwrap();
+            },
             "gauges" => {
+                for (key, value) in buckets.gauges().iter() {
+                    write!(out, " {}: {}\n", key, value).unwrap();
+                }
+                write!(out, "END\n\n").unwrap();
             },
             "timers" => {
+                for (key, value) in buckets.timers().iter() {
+                    write!(out, " {}: {:?}\n", key, value).unwrap();
+                }
+                write!(out, "END\n\n").unwrap();
             },
-            */
             "quit" => {
-                let bye = "Good bye!\n";
-                let _ = writer.write(&bye.as_bytes());
+                write!(out, "Good bye!\n\n").unwrap();
                 done = true
-            }
+            },
             x => {
-                let out = format!("ERROR - unknown command `{}`\n", x);
-                let _ = writer.write(&out.as_bytes());
+                write!(out, "ERROR - unknown command `{}`\n", x).unwrap();
             }
         }
+        let _ = writer.write(&out.as_bytes());
         let _ = writer.flush();
     }
 }
