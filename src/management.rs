@@ -7,7 +7,7 @@ use std::fmt::Write as fmtWrite;
 
 /// Handle the management commands
 /// returning the response to send back.
-pub fn exec(stream: TcpStream, buckets: &Buckets) {
+pub fn exec(stream: TcpStream, buckets: &mut Buckets) {
     let mut reader = BufReader::new(stream);
     let mut done = false;
 
@@ -62,6 +62,10 @@ pub fn exec(stream: TcpStream, buckets: &Buckets) {
             "quit" => {
                 write!(out, "Good bye!\n\n").unwrap();
                 done = true
+            },
+            "clear" => {
+                buckets.reset();
+                write!(out, "Timers, counters and internal stats cleared.\n").unwrap();
             },
             x => {
                 write!(out, "ERROR - unknown command `{}`\n", x).unwrap();
