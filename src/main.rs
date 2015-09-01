@@ -5,7 +5,6 @@ extern crate time;
 use std::thread;
 use std::sync::mpsc::channel;
 use std::str;
-use std::str::FromStr;
 use backend::Backend;
 
 
@@ -82,15 +81,17 @@ fn main() {
             server::Event::UdpMessage(buf) => {
                 // Create the metric and push it into the buckets.
                 str::from_utf8(&buf).map(|val| {
-                    metric::Metric::from_str(&val)
-                    .and_then(|metric| {
-                        buckets.add(&metric);
-                        Ok(metric)
-                    })
-                    .or_else(|err| {
-                        buckets.add_bad_message();
-                        Err(err)
-                    }).ok();
+                    metric::Metric::parse(&val)
+                        .and_then(|metrics| {
+                            for metric in metrics.iter() {
+                                buckets.add(&metric);
+                            }
+                            Ok(metrics.len())
+                        })
+                        .or_else(|err| {
+                            buckets.add_bad_message();
+                            Err(err)
+                        }).ok();
                 }).ok();
             },
 

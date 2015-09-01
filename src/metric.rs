@@ -1,7 +1,6 @@
 /// Internal metric representation
 ///
 use std::fmt;
-use std::str::FromStr;
 
 
 /// Enum of metric types
@@ -41,26 +40,43 @@ pub struct Metric {
 }
 
 impl Metric {
-    pub fn new(name: &str, value: f64, kind: MetricKind) -> Metric {
-        Metric{name: name.to_string(), value: value, kind: kind}
+    /// Create a new metric
+    ///
+    /// Uses the Into trait to allow both str and String types.
+    pub fn new<S: Into<String>>(name: S, value: f64, kind: MetricKind) -> Metric {
+        Metric{name: name.into(), value: value, kind: kind}
     }
-}
-
-impl FromStr for Metric {
-    type Err = ParseError;
 
     /// Valid message formats are:
     ///
     /// - `<str:metric_name>:<f64:value>|<str:type>`
     /// - `<str:metric_name>:<f64:value>|c|@<f64:sample_rate>`
     ///
-    /// This does not yet support batch metrics. Right now each UDP packet
-    /// can only contain a single metric.
-    fn from_str(line: &str) -> Result<Metric, ParseError> {
+    /// Multiple metrics can be sent in a single UDP packet
+    /// separated by newlines.
+    pub fn parse(source: &str) -> Result<Vec<Metric>, ParseError> {
+        let mut results: Vec<Metric> = Vec::new();
+
+        for line in source.lines() {
+            match Metric::parse_line(line) {
+                Ok(metric) => results.push(metric),
+                Err(e) => return Err(e)
+            }
+        }
+        if results.len() == 0 {
+            return Err(ParseError::SyntaxError(
+                    "No metrics found",
+                    0))
+        }
+        Ok(results)
+    }
+
+    fn parse_line(line: &str) -> Result<Metric, ParseError> {
         // Get the metric name
         let name_parts: Vec<&str> = line.trim_right_matches('\n')
             .split(':')
             .collect();
+
         if name_parts.len() < 2 || name_parts[0].is_empty() {
             return Err(ParseError::SyntaxError(
                     "Metrics require a name.",
@@ -88,13 +104,12 @@ impl FromStr for Metric {
                         .parse::<f64>().ok().unwrap();
                 }
                 MetricKind::Counter(rate)
-            }
+            },
             _ => return Err(ParseError::SyntaxError(
                     "Unknown metric type.",
                     2))
         };
-
-        Ok(Metric{name: name, value: value, kind: kind})
+        Ok(Metric::new(name, value, kind))
     }
 }
 
@@ -106,7 +121,6 @@ impl FromStr for Metric {
 #[cfg(test)]
 mod test {
     use metric::{Metric,MetricKind};
-    use std::str::FromStr;
     use std::collections::HashMap;
 
     #[test]
@@ -126,17 +140,29 @@ mod test {
     }
 
     #[test]
-    fn test_metric_from_str_invalid_no_name() {
-        let res = Metric::from_str("");
+    fn test_metric_parse_invalid_no_name() {
+        let res = Metric::parse("");
         assert!(res.is_err(), "Should have an error");
         assert!(!res.is_ok(), "Should have an error");
     }
 
     #[test]
-    fn test_metric_from_str_invalid_no_value() {
-        let res = Metric::from_str("foo:");
+    fn test_metric_parse_invalid_no_value() {
+        let res = Metric::parse("foo:");
         assert!(res.is_err(), "Should have an error");
         assert!(!res.is_ok(), "Should have an error");
+    }
+
+    #[test]
+    fn test_metric_multiple() {
+        let res = Metric::parse("a.b:12.1|g\nb.c:13.2|c").unwrap();
+        assert_eq!(2, res.len());
+
+        assert_eq!("a.b", res[0].name);
+        assert_eq!(12.1, res[0].value);
+
+        assert_eq!("b.c", res[1].name);
+        assert_eq!(13.2, res[1].value);
     }
 
     #[test]
@@ -168,17 +194,17 @@ mod test {
         );
 
         for (input, expected) in valid.iter() {
-            let result = Metric::from_str(*input);
+            let result = Metric::parse(*input);
             assert!(result.is_ok());
 
             let actual = result.ok().unwrap();
-            assert_eq!(expected.name, actual.name);
-            assert_eq!(expected.value, actual.value);
+            assert_eq!(expected.name, actual[0].name);
+            assert_eq!(expected.value, actual[0].value);
 
             // TODO this is stupid, there must be a better way.
             assert_eq!(
                 format!("{:?}", expected.kind),
-                format!("{:?}", actual.kind)
+                format!("{:?}", actual[0].kind)
             );
         }
     }
@@ -195,7 +221,7 @@ mod test {
             ":1.0|c"
         ];
         for input in invalid.iter() {
-            let result = Metric::from_str(*input);
+            let result = Metric::parse(*input);
             assert!(result.is_err());
         }
     }
