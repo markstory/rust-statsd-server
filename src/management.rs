@@ -67,11 +67,16 @@ pub fn exec(stream: TcpStream, buckets: &mut Buckets) {
                 buckets.reset();
                 write!(out, "Timers, counters and internal stats cleared.\n").unwrap();
             },
+            "" => {
+                // continue.
+            },
             x => {
                 write!(out, "ERROR - unknown command `{}`\n", x).unwrap();
             }
         }
-        let _ = writer.write(&out.as_bytes());
-        let _ = writer.flush();
+        if out.len() > 0 {
+            let _ = writer.write(&out.as_bytes());
+            let _ = writer.flush();
+        }
     }
 }
