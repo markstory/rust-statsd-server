@@ -71,6 +71,7 @@ impl Metric {
         Ok(results)
     }
 
+    /// Parses a metric from each line in a packet.
     fn parse_line(line: &str) -> Result<Metric, ParseError> {
         // Get the metric name
         let name_parts: Vec<&str> = line.trim_right_matches('\n')
