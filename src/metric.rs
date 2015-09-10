@@ -108,7 +108,7 @@ impl Metric {
             },
             _ => return Err(ParseError::SyntaxError(
                     "Unknown metric type.",
-                    2))
+                    name.len() + val_parts[0].len()))
         };
         Ok(Metric::new(name, value, kind))
     }
@@ -120,7 +120,7 @@ impl Metric {
 // Tests
 //
 #[cfg(test)]
-mod test {
+mod tests {
     use metric::{Metric,MetricKind};
     use std::collections::HashMap;
 
@@ -215,6 +215,7 @@ mod test {
         let invalid = vec![
             "",
             "metric",
+            "metric|11:",
             "metric|12",
             "metric:13|",
             "metric:14|c@1",
