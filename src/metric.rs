@@ -73,42 +73,61 @@ impl Metric {
 
     /// Parses a metric from each line in a packet.
     fn parse_line(line: &str) -> Result<Metric, ParseError> {
-        // Get the metric name
-        let name_parts: Vec<&str> = line.trim_right_matches('\n')
-            .split(':')
-            .collect();
+        // track position in string
+        let mut idx = 0;
 
-        if name_parts.len() < 2 || name_parts[0].is_empty() {
+        // Get the metric name
+        let name = match line.find(':') {
+            Some(pos) => {
+                idx = pos + 1;
+                &line[0..pos]
+            },
+            _ => ""
+        };
+        if name.is_empty() {
             return Err(ParseError::SyntaxError(
-                    "Metrics require a name.",
-                    0))
+                       "Metrics require a name.",
+                       idx));
         }
-        let name = name_parts[0].to_string();
 
         // Get the float val
-        let val_parts: Vec<&str> = name_parts[1].split('|').collect();
-        if val_parts.len() < 2 || val_parts[0].is_empty() {
-            return Err(ParseError::SyntaxError(
-                    "Metrics require a value.",
-                    name.len()))
-        }
-        let value = val_parts[0].parse::<f64>().ok().unwrap();
+        let value = match line[idx..].find('|') {
+            Some(pos) => {
+                let start = idx;
+                idx += pos + 1;
+                line[start..idx - 1].parse::<f64>().ok().unwrap()
+            },
+            _ => return Err(ParseError::SyntaxError(
+                            "Metrics require a value.",
+                            idx))
+        };
+        let kind_name = match line[idx..].find('|') {
+            Some(pos) => {
+                let start = idx;
+                idx += pos;
+                line[start..idx].to_string()
+            },
+            _ => line[idx..].to_string()
+        };
 
-        // Get kind parts
-        let kind = match val_parts[1] {
+        // Get kind parts, use deref/ref tricks
+        // to get types to match
+        let kind = match &*kind_name {
             "ms" => MetricKind::Timer,
             "g" => MetricKind::Gauge,
             "c" => {
-                let mut rate:f64 = 1.0;
-                if val_parts.len() == 3 {
-                    rate = val_parts[2].trim_left_matches('@')
-                        .parse::<f64>().ok().unwrap();
-                }
+                let rate: f64 = match line[idx..].find('@') {
+                    Some(pos) => {
+                        idx += pos + 1;
+                        line[idx..].parse::<f64>().ok().unwrap()
+                    },
+                    _ => 1.0
+                };
                 MetricKind::Counter(rate)
             },
             _ => return Err(ParseError::SyntaxError(
-                    "Unknown metric type.",
-                    name.len() + val_parts[0].len()))
+                            "Unknown metric type.",
+                            idx))
         };
         Ok(Metric::new(name, value, kind))
     }
@@ -223,6 +242,7 @@ mod tests {
             ":1.0|c"
         ];
         for input in invalid.iter() {
+            println!("{:?}", input);
             let result = Metric::parse(*input);
             assert!(result.is_err());
         }
