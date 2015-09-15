@@ -1,5 +1,7 @@
 # Rust Statsd Server
 
+[![Build Status](https://travis-ci.org/markstory/rust-statsd-server.svg?branch=master)](https://travis-ci.org/markstory/rust-statsd-server)
+
 This is a statsd server implementation written in rust. It aims to be as
 compatible as possible with etsy/statsd.
 
