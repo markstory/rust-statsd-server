@@ -69,3 +69,9 @@ This server tracks a few internal metrics:
   messages.
 * `statsd.processing_time` How many ms were spent calculating derived metrics
   in the current flush cycle.
+
+
+## Prior Art
+
+I took a bunch of inspiration in how to implement and structure this
+implementation from [erik/rust-statsd](https://github.com/erik/rust-statsd).
