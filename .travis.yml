@@ -1,0 +1,6 @@
+language: rust
+
+script: make test
+
+notifications:
+    email: false
