@@ -17,7 +17,6 @@ impl Console {
     pub fn new() -> Console {
         Console
     }
-
 }
 
 /// Print a single stats line.
@@ -29,8 +28,7 @@ fn fmt_line(key: &str, value: &f64) {
 impl Backend for Console {
     fn flush_buckets(&mut self, buckets: &Buckets) {
         let now = time::get_time();
-        println!("Flushing metrics: {}",
-                 time::at(now).rfc822().to_string());
+        println!("Flushing metrics: {}", time::at(now).rfc822().to_string());
 
         println!("  bad_messages: {}", buckets.bad_messages());
         println!("  total_messages: {}", buckets.total_messages());

@@ -65,14 +65,14 @@ impl Buckets {
             MetricKind::Counter(rate) => {
                 let counter = self.counters.entry(name).or_insert(0.0);
                 *counter = *counter + value.value * (1.0 / rate);
-            },
+            }
             MetricKind::Gauge => {
                 self.gauges.insert(name, value.value);
-            },
+            }
             MetricKind::Timer => {
                 let slot = self.timers.entry(name).or_insert(Vec::new());
                 slot.push(value.value);
-            },
+            }
         }
         self.last_message = time::get_time();
         self.total_messages += 1;
@@ -147,7 +147,6 @@ impl Buckets {
 }
 
 
-//
 // Tests
 //
 #[cfg(test)]
@@ -173,8 +172,8 @@ mod test {
         let mut buckets = Buckets::new();
         // duff value to ensure it changes.
         let original = time::strptime("2015-08-03 19:50:12", "%Y-%m-%d %H:%M:%S")
-            .unwrap()
-            .to_timespec();
+                           .unwrap()
+                           .to_timespec();
         buckets.last_message = original;
 
         let metric = Metric::new("some.metric", 1.0, MetricKind::Counter(1.0));

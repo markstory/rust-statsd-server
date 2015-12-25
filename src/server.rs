@@ -8,7 +8,7 @@ use std::thread::sleep_ms;
 pub enum Event {
     UdpMessage(Vec<u8>),
     TcpMessage(TcpStream),
-    TimerFlush
+    TimerFlush,
 }
 
 
@@ -35,8 +35,8 @@ pub fn admin_server(chan: Sender<Event>, port: u16, host: &str) {
         match stream {
             Ok(stream) => {
                 chan.send(Event::TcpMessage(stream)).unwrap();
-            },
-            Err (e) => panic!("Unable to establish TCP socket: {}", e)
+            }
+            Err(e) => panic!("Unable to establish TCP socket: {}", e),
         }
     }
 }

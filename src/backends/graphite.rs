@@ -11,7 +11,7 @@ use time;
 pub struct Graphite {
     addr: SocketAddrV4,
     last_flush_time: u64,
-    last_flush_length: u64
+    last_flush_length: u64,
 }
 
 
@@ -39,45 +39,30 @@ impl Graphite {
         let start = time::get_time().sec;
         let mut stats = String::new();
 
-        write!(
-            stats,
-            "{} {} {}\n",
-            "statsd.bad_messages",
-            buckets.bad_messages(),
-            start).unwrap();
-        write!(
-            stats,
-            "{} {} {}\n",
-            "statsd.total_messages",
-            buckets.total_messages(),
-            start).unwrap();
+        write!(stats,
+               "{} {} {}\n",
+               "statsd.bad_messages",
+               buckets.bad_messages(),
+               start)
+            .unwrap();
+        write!(stats,
+               "{} {} {}\n",
+               "statsd.total_messages",
+               buckets.total_messages(),
+               start)
+            .unwrap();
 
         for (key, value) in buckets.counters().iter() {
-            write!(
-                stats,
-                "{} {} {} \n",
-                key,
-                value,
-                start).unwrap();
+            write!(stats, "{} {} {} \n", key, value, start).unwrap();
         }
 
         for (key, value) in buckets.gauges().iter() {
-            write!(
-                stats,
-                "{} {} {} \n",
-                key,
-                value,
-                start).unwrap();
+            write!(stats, "{} {} {} \n", key, value, start).unwrap();
         }
 
         // The raw timer data is not sent to graphite.
         for (key, value) in buckets.timer_data().iter() {
-            write!(
-                stats,
-                "{} {} {} \n",
-                key,
-                value,
-                start).unwrap();
+            write!(stats, "{} {} {} \n", key, value, start).unwrap();
         }
         stats
     }

@@ -41,10 +41,9 @@ pub fn process(buckets: &mut Buckets) {
     buckets.set_timer_data(timer_data);
 
     let duration = time::get_time() - start_time;
-    let process_duration = Metric::new(
-        "statsd.processing_time",
-        duration.num_milliseconds() as f64,
-        MetricKind::Counter(1.0));
+    let process_duration = Metric::new("statsd.processing_time",
+                                       duration.num_milliseconds() as f64,
+                                       MetricKind::Counter(1.0));
     buckets.add(&process_duration);
 }
 
@@ -52,7 +51,7 @@ pub fn process(buckets: &mut Buckets) {
 /// Extract the value at the given percentile.
 /// If vector has an even length, two values will be
 /// averaged together.
-fn percentile(values :&Vec<f64>, tile: f64) -> f64 {
+fn percentile(values: &Vec<f64>, tile: f64) -> f64 {
     let len = values.len() as f64;
     let index = (len * tile) as usize;
     if (values.len() % 2) == 0 {
@@ -73,12 +72,10 @@ mod test {
     fn make_buckets() -> Buckets {
         let mut buckets = Buckets::new();
 
-        let metrics = [
-            Metric::new("some.timer", 13.1, MetricKind::Timer),
-            Metric::new("some.timer", 33.7, MetricKind::Timer),
-            Metric::new("some.timer", 3.4, MetricKind::Timer),
-            Metric::new("some.timer", 12.1, MetricKind::Timer),
-        ];
+        let metrics = [Metric::new("some.timer", 13.1, MetricKind::Timer),
+                       Metric::new("some.timer", 33.7, MetricKind::Timer),
+                       Metric::new("some.timer", 3.4, MetricKind::Timer),
+                       Metric::new("some.timer", 12.1, MetricKind::Timer)];
         for m in metrics.iter() {
             buckets.add(&m);
         }
@@ -97,18 +94,14 @@ mod test {
         assert_eq!(Some(&3.4), buckets.timer_data().get("some.timer.min"));
         assert_eq!(Some(&33.7), buckets.timer_data().get("some.timer.max"));
         assert_eq!(Some(&4.0), buckets.timer_data().get("some.timer.count"));
-        assert_float(
-            "15.575",
-            buckets.timer_data().get("some.timer.mean").unwrap());
-        assert_float(
-            "12.600",
-            buckets.timer_data().get("some.timer.median").unwrap());
-        assert_float(
-            "11.124",
-            buckets.timer_data().get("some.timer.stddev").unwrap());
-        assert_float(
-            "23.400",
-            buckets.timer_data().get("some.timer.upper_95").unwrap());
+        assert_float("15.575",
+                     buckets.timer_data().get("some.timer.mean").unwrap());
+        assert_float("12.600",
+                     buckets.timer_data().get("some.timer.median").unwrap());
+        assert_float("11.124",
+                     buckets.timer_data().get("some.timer.stddev").unwrap());
+        assert_float("23.400",
+                     buckets.timer_data().get("some.timer.upper_95").unwrap());
     }
 
     #[test]

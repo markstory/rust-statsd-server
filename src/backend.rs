@@ -15,12 +15,11 @@ pub trait Backend {
 
 /// Creates the collection of backends based on the paraemeters
 ///
-pub fn factory(
-    console: &bool,
-    graphite: &bool,
-    graphite_host: &str,
-    graphite_port: &u16
-) -> Box<[Box<Backend>]> {
+pub fn factory(console: &bool,
+               graphite: &bool,
+               graphite_host: &str,
+               graphite_port: &u16)
+               -> Box<[Box<Backend>]> {
     let mut backends: Vec<Box<Backend>> = Vec::with_capacity(2);
     if *console {
         backends.push(Box::new(console::Console::new()));

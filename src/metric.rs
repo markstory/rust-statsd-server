@@ -13,9 +13,9 @@ pub enum MetricKind {
 impl fmt::Debug for MetricKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            MetricKind::Gauge      => write!(f, "Gauge"),
-            MetricKind::Timer      => write!(f, "Timer"),
-            MetricKind::Counter(s) => write!(f, "Counter(s={})", s)
+            MetricKind::Gauge => write!(f, "Gauge"),
+            MetricKind::Timer => write!(f, "Timer"),
+            MetricKind::Counter(s) => write!(f, "Counter(s={})", s),
         }
     }
 }
@@ -26,7 +26,7 @@ impl fmt::Debug for MetricKind {
 #[derive(Debug)]
 pub enum ParseError {
     // Error message, column
-    SyntaxError(&'static str, usize)
+    SyntaxError(&'static str, usize),
 }
 
 
@@ -36,7 +36,7 @@ pub enum ParseError {
 pub struct Metric {
     pub kind: MetricKind,
     pub name: String,
-    pub value: f64
+    pub value: f64,
 }
 
 impl Metric {
@@ -44,7 +44,11 @@ impl Metric {
     ///
     /// Uses the Into trait to allow both str and String types.
     pub fn new<S: Into<String>>(name: S, value: f64, kind: MetricKind) -> Metric {
-        Metric{name: name.into(), value: value, kind: kind}
+        Metric {
+            name: name.into(),
+            value: value,
+            kind: kind,
+        }
     }
 
     /// Valid message formats are:
@@ -60,13 +64,11 @@ impl Metric {
         for line in source.lines() {
             match Metric::parse_line(line) {
                 Ok(metric) => results.push(metric),
-                Err(e) => return Err(e)
+                Err(e) => return Err(e),
             }
         }
         if results.len() == 0 {
-            return Err(ParseError::SyntaxError(
-                    "No metrics found",
-                    0))
+            return Err(ParseError::SyntaxError("No metrics found", 0));
         }
         Ok(results)
     }
@@ -81,13 +83,11 @@ impl Metric {
             Some(pos) => {
                 idx = pos + 1;
                 &line[0..pos]
-            },
-            _ => ""
+            }
+            _ => "",
         };
         if name.is_empty() {
-            return Err(ParseError::SyntaxError(
-                       "Metrics require a name.",
-                       idx));
+            return Err(ParseError::SyntaxError("Metrics require a name.", idx));
         }
 
         // Get the float val
@@ -96,18 +96,16 @@ impl Metric {
                 let start = idx;
                 idx += pos + 1;
                 line[start..idx - 1].parse::<f64>().ok().unwrap()
-            },
-            _ => return Err(ParseError::SyntaxError(
-                            "Metrics require a value.",
-                            idx))
+            }
+            _ => return Err(ParseError::SyntaxError("Metrics require a value.", idx)),
         };
         let kind_name = match line[idx..].find('|') {
             Some(pos) => {
                 let start = idx;
                 idx += pos;
                 line[start..idx].to_string()
-            },
-            _ => line[idx..].to_string()
+            }
+            _ => line[idx..].to_string(),
         };
 
         // Get kind parts, use deref/ref tricks
@@ -120,14 +118,12 @@ impl Metric {
                     Some(pos) => {
                         idx += pos + 1;
                         line[idx..].parse::<f64>().ok().unwrap()
-                    },
-                    _ => 1.0
+                    }
+                    _ => 1.0,
                 };
                 MetricKind::Counter(rate)
-            },
-            _ => return Err(ParseError::SyntaxError(
-                            "Unknown metric type.",
-                            idx))
+            }
+            _ => return Err(ParseError::SyntaxError("Unknown metric type.", idx)),
         };
         Ok(Metric::new(name, value, kind))
     }
@@ -135,28 +131,18 @@ impl Metric {
 
 
 
-//
 // Tests
 //
 #[cfg(test)]
 mod tests {
-    use metric::{Metric,MetricKind};
+    use metric::{Metric, MetricKind};
     use std::collections::HashMap;
 
     #[test]
     fn test_metric_kind_debug_fmt() {
-        assert_eq!(
-            "Gauge",
-            format!("{:?}", MetricKind::Gauge)
-        );
-        assert_eq!(
-            "Timer",
-            format!("{:?}", MetricKind::Timer)
-        );
-        assert_eq!(
-            "Counter(s=6)",
-            format!("{:?}", MetricKind::Counter(6.0))
-        );
+        assert_eq!("Gauge", format!("{:?}", MetricKind::Gauge));
+        assert_eq!("Timer", format!("{:?}", MetricKind::Timer));
+        assert_eq!("Counter(s=6)", format!("{:?}", MetricKind::Counter(6.0)));
     }
 
     #[test]
@@ -188,30 +174,18 @@ mod tests {
     #[test]
     fn test_metric_valid() {
         let mut valid = HashMap::new();
-        valid.insert(
-            "foo.test:12.3|ms\n",
-            Metric::new("foo.test", 12.3, MetricKind::Timer)
-        );
-        valid.insert(
-            "foo.test:12.3|ms",
-            Metric::new("foo.test", 12.3, MetricKind::Timer)
-        );
-        valid.insert(
-            "test:18.123|g",
-            Metric::new("test", 18.123, MetricKind::Gauge)
-        );
-        valid.insert(
-            "test:18.123|g",
-            Metric::new("test", 18.123, MetricKind::Gauge)
-        );
-        valid.insert(
-            "thing.total:12|c",
-            Metric::new("thing.total", 12.0, MetricKind::Counter(1.0))
-        );
-        valid.insert(
-            "thing.total:5.6|c|@123",
-            Metric::new("thing.total", 5.6, MetricKind::Counter(123.0))
-        );
+        valid.insert("foo.test:12.3|ms\n",
+                     Metric::new("foo.test", 12.3, MetricKind::Timer));
+        valid.insert("foo.test:12.3|ms",
+                     Metric::new("foo.test", 12.3, MetricKind::Timer));
+        valid.insert("test:18.123|g",
+                     Metric::new("test", 18.123, MetricKind::Gauge));
+        valid.insert("test:18.123|g",
+                     Metric::new("test", 18.123, MetricKind::Gauge));
+        valid.insert("thing.total:12|c",
+                     Metric::new("thing.total", 12.0, MetricKind::Counter(1.0)));
+        valid.insert("thing.total:5.6|c|@123",
+                     Metric::new("thing.total", 5.6, MetricKind::Counter(123.0)));
 
         for (input, expected) in valid.iter() {
             let result = Metric::parse(*input);
@@ -222,25 +196,21 @@ mod tests {
             assert_eq!(expected.value, actual[0].value);
 
             // TODO this is stupid, there must be a better way.
-            assert_eq!(
-                format!("{:?}", expected.kind),
-                format!("{:?}", actual[0].kind)
-            );
+            assert_eq!(format!("{:?}", expected.kind),
+                       format!("{:?}", actual[0].kind));
         }
     }
 
     #[test]
     fn test_metric_invalid() {
-        let invalid = vec![
-            "",
-            "metric",
-            "metric|11:",
-            "metric|12",
-            "metric:13|",
-            "metric:14|c@1",
-            ":|@",
-            ":1.0|c"
-        ];
+        let invalid = vec!["",
+                           "metric",
+                           "metric|11:",
+                           "metric|12",
+                           "metric:13|",
+                           "metric:14|c@1",
+                           ":|@",
+                           ":1.0|c"];
         for input in invalid.iter() {
             println!("{:?}", input);
             let result = Metric::parse(*input);
