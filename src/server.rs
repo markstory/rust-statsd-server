@@ -1,6 +1,6 @@
 use std::sync::mpsc::Sender;
 use std::net::{Ipv4Addr, TcpStream, TcpListener, UdpSocket, SocketAddrV4};
-use std::thread::sleep_ms;
+use std::thread::sleep;
 
 
 /// Acceptable event types.
@@ -47,7 +47,7 @@ pub fn admin_server(chan: Sender<Event>, port: u16, host: &str) {
 /// This message is used to push data from the buckets to the backends.
 pub fn flush_timer_loop(chan: Sender<Event>, interval: u32) {
     loop {
-        sleep_ms(interval * 1000);
+        sleep(interval);
         chan.send(Event::TimerFlush).unwrap();
     }
 }
