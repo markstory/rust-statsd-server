@@ -27,7 +27,7 @@ pub struct Args {
     pub flag_port: u16,
     pub flag_admin_port: u16,
     pub flag_admin_host: String,
-    pub flag_flush_interval: u32,
+    pub flag_flush_interval: u64,
     pub flag_console: bool,
     pub flag_graphite: bool,
     pub flag_graphite_port: u16,
