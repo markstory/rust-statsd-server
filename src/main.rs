@@ -1,11 +1,13 @@
-extern crate docopt;
-extern crate rustc_serialize;
+#[macro_use]
+extern crate serde_derive;
+
+extern crate serde;
 extern crate time;
+extern crate docopt;
 
 use std::thread;
 use std::sync::mpsc::channel;
 use std::str;
-use backend::Backend;
 
 
 // Local module imports.

@@ -22,7 +22,7 @@ Options:
 ";
 
 /// Holds the parsed command line arguments
-#[derive(RustcDecodable, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct Args {
     pub flag_port: u16,
     pub flag_admin_port: u16,
@@ -37,7 +37,7 @@ pub struct Args {
 
 pub fn parse_args() -> Args {
     let args: Args = Docopt::new(USAGE)
-        .and_then(|d| d.decode())
+        .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
     args
 }

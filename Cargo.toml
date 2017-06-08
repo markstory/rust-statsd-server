@@ -1,9 +1,10 @@
 [package]
 name = "statsd"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Mark Story <mark@mark-story.com>"]
 
 [dependencies]
-docopt = "*"
-rustc-serialize = "*"
-time = "0.1"
+docopt = "^0.8"
+serde_derive = "^1.0.8"
+serde = "^1.0.8"
+time = "^0.1"
