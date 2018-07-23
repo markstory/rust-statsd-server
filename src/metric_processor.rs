@@ -16,27 +16,29 @@ pub fn process(buckets: &mut Buckets) {
 
     // Add the various derived values for timers.
     for (key, values) in buckets.timers().iter() {
-        let mut v = values.clone();
-        v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        if values.len() > 0 {
+            let mut v = values.clone();
+            v.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-        let len = v.len() as f64;
-        let sum = v.iter().fold(0.0, |sum, x| sum + x);
-        let mean = sum / len;
+            let len = v.len() as f64;
+            let sum = v.iter().fold(0.0, |sum, x| sum + x);
+            let mean = sum / len;
 
-        // Get population standard deviation
-        let sum_diff = v.iter().fold(0.0, |sum, x| sum + (x - mean).powi(2));
-        let stddev = (sum_diff / len).sqrt();
+            // Get population standard deviation
+            let sum_diff = v.iter().fold(0.0, |sum, x| sum + (x - mean).powi(2));
+            let stddev = (sum_diff / len).sqrt();
 
-        let median = percentile(&v, 0.5);
-        let upper_95 = percentile(&v, 0.95);
+            let median = percentile(&v, 0.5);
+            let upper_90 = percentile(&v, 0.90);
 
-        timer_data.insert(format!("{}.min", key), v[0]);
-        timer_data.insert(format!("{}.max", key), v[v.len() - 1]);
-        timer_data.insert(format!("{}.count", key), len);
-        timer_data.insert(format!("{}.mean", key), mean);
-        timer_data.insert(format!("{}.median", key), median);
-        timer_data.insert(format!("{}.stddev", key), stddev);
-        timer_data.insert(format!("{}.upper_95", key), upper_95);
+            timer_data.insert(format!("{}.min", key), v[0]);
+            timer_data.insert(format!("{}.max", key), v[v.len() - 1]);
+            timer_data.insert(format!("{}.count", key), len);
+            timer_data.insert(format!("{}.mean", key), mean);
+            timer_data.insert(format!("{}.median", key), median);
+            timer_data.insert(format!("{}.stddev", key), stddev);
+            timer_data.insert(format!("{}.upper_90", key), upper_90);
+        }
     }
     buckets.set_timer_data(timer_data);
 
@@ -101,7 +103,7 @@ mod test {
         assert_float("11.124",
                      buckets.timer_data().get("some.timer.stddev").unwrap());
         assert_float("23.400",
-                     buckets.timer_data().get("some.timer.upper_95").unwrap());
+                     buckets.timer_data().get("some.timer.upper_90").unwrap());
     }
 
     #[test]

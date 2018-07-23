@@ -7,6 +7,7 @@ use std::fmt;
 pub enum MetricKind {
     Counter(f64), // sample rate
     Gauge,
+    GaugeDelta,
     Timer,
 }
 
@@ -14,6 +15,7 @@ impl fmt::Debug for MetricKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             MetricKind::Gauge => write!(f, "Gauge"),
+            MetricKind::GaugeDelta => write!(f, "GaugeDelta"),
             MetricKind::Timer => write!(f, "Timer"),
             MetricKind::Counter(s) => write!(f, "Counter(s={})", s),
         }
@@ -90,12 +92,23 @@ impl Metric {
             return Err(ParseError::SyntaxError("Metrics require a name.", idx));
         }
 
+        let mut name = name;
+        if name.len() >= 2 && &name[0..1] == "'" && &name[name.len() - 1 .. name.len()] == "'" {
+            name = &name[1..name.len() - 1];
+        }
+
+        let unsigned;
         // Get the float val
         let value = match line[idx..].find('|') {
             Some(pos) => {
                 let start = idx;
+                unsigned = &line[start..start + 1] != "+" && &line[start..start + 1] != "-";
                 idx += pos + 1;
-                line[start..idx - 1].parse::<f64>().ok().unwrap()
+                match line[start..idx - 1].parse::<f64>() {
+                    Ok(value) => value,
+                    _ => return Err(ParseError::SyntaxError(
+                        "Cannot parse a number in a metric", idx)),
+                }
             }
             _ => return Err(ParseError::SyntaxError("Metrics require a value.", idx)),
         };
@@ -112,12 +125,18 @@ impl Metric {
         // to get types to match
         let kind = match &*kind_name {
             "ms" => MetricKind::Timer,
-            "g" => MetricKind::Gauge,
+            "g" => {
+                if unsigned { MetricKind::Gauge } else { MetricKind::GaugeDelta }
+            },
             "c" => {
                 let rate: f64 = match line[idx..].find('@') {
                     Some(pos) => {
                         idx += pos + 1;
-                        line[idx..].parse::<f64>().ok().unwrap()
+                        match line[idx..].parse::<f64>() {
+                            Ok(value) => value,
+                            _ => return Err(ParseError::SyntaxError(
+                                "Cannot parse sample size in counter", idx)),
+                        }
                     }
                     _ => 1.0,
                 };

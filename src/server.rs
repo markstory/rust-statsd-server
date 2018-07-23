@@ -1,8 +1,15 @@
+
 use std::sync::mpsc::Sender;
-use std::net::{Ipv4Addr, TcpStream, TcpListener, UdpSocket, SocketAddrV4};
+use std::net::{Ipv4Addr, TcpStream, TcpListener, SocketAddrV4};
+use std::net::ToSocketAddrs;
 use std::thread::sleep;
 use std::time::Duration;
-
+use std::io;
+use std::net::SocketAddr;
+use tokio_core::net::{UdpSocket, UdpCodec};
+use tokio_core::reactor::Core;
+use futures::{Stream};
+use futures::future;
 
 /// Acceptable event types.
 ///
@@ -12,21 +19,40 @@ pub enum Event {
     TimerFlush,
 }
 
+pub struct LineCodec;
+
+impl UdpCodec for LineCodec {
+    type In = (SocketAddr, Vec<u8>);
+    type Out = (SocketAddr, Vec<u8>);
+
+    fn decode(&mut self, addr: &SocketAddr, buf: &[u8]) -> io::Result<Self::In> {
+        Ok((*addr, buf.to_vec()))
+    }
+
+    fn encode(&mut self, (addr, buf): Self::Out, into: &mut Vec<u8>) -> SocketAddr {
+        into.extend(buf);
+        addr
+    }
+}
 
 /// Setup the UDP socket that listens for metrics and
 /// publishes them into the bucket storage.
 pub fn udp_server(chan: Sender<Event>, port: u16) {
+    let mut core = Core::new().unwrap();
+    let handle = core.handle();
+
     let addr = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), port);
-    let socket = UdpSocket::bind(addr).ok().unwrap();
-    let mut buf = [0; 256];
-    loop {
-        let (len, _) = match socket.recv_from(&mut buf) {
-            Ok(r) => r,
-            Err(_) => panic!("Could not read UDP socket."),
-        };
-        let bytes = Vec::from(&buf[..len]);
-        chan.send(Event::UdpMessage(bytes)).unwrap();
-    }
+    let addr = addr.to_socket_addrs().unwrap().last().unwrap();
+
+    let socket = UdpSocket::bind(&addr, &handle).unwrap();
+    let (_, stream) =
+        socket.framed(LineCodec).split();
+
+    let stream = stream.for_each(|(_addr, msg)| {
+        let _ = chan.send(Event::UdpMessage(Vec::from(msg)));
+        future::ok(())
+    });
+    let _ = core.run(stream);
 }
 
 /// Setup the TCP socket that listens for management commands.

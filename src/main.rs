@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate serde_derive;
+extern crate tokio_core;
+extern crate futures;
 
 extern crate serde;
 extern crate time;
@@ -21,16 +23,28 @@ mod metric_processor;
 mod backends {
     pub mod console;
     pub mod graphite;
+    pub mod statsd;
 }
 
 
 fn main() {
     let args = cli::parse_args();
 
-    let mut backends = backend::factory(&args.flag_console,
-                                        &args.flag_graphite,
-                                        &args.flag_graphite_host,
-                                        &args.flag_graphite_port);
+    let mut backends = backend::factory(
+        &args.flag_console,
+        args.flag_flush_interval as i32,
+        &args.flag_graphite,
+        &args.flag_graphite_prefix,
+        &args.flag_graphite_prefix_counter,
+        &args.flag_graphite_prefix_gauge,
+        &args.flag_graphite_prefix_timer,
+        &args.flag_graphite_host,
+        &args.flag_graphite_port,
+        &args.flag_statsd,
+        &args.flag_statsd_host,
+        &args.flag_statsd_port,
+        &args.flag_statsd_packet_size
+    );
 
     let (event_send, event_recv) = channel();
     let flush_send = event_send.clone();

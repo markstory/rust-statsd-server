@@ -18,7 +18,7 @@ pub fn exec(stream: TcpStream, buckets: &mut Buckets) {
                             .next()
                             .unwrap_or("")
                             .to_lowercase();
-        let mut writer = reader.get_mut();
+        let writer = reader.get_mut();
         let mut out = String::new();
 
         // Trigger Deref<Target = str>
