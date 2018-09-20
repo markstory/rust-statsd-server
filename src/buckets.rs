@@ -148,6 +148,19 @@ impl Buckets {
     pub fn process(&mut self) {
         metric_processor::process(self)
     }
+
+    pub fn clone(&self) -> Buckets {
+        Buckets {
+            counters: self.counters.clone(),
+            gauges: self.gauges.clone(),
+            timers: self.timers.clone(),
+            timer_data: self.timer_data.clone(),
+            bad_messages: self.bad_messages,
+            total_messages: self.total_messages,
+            last_message: self.last_message,
+            server_start_time: self.server_start_time,
+        }
+    }
 }
 
 
