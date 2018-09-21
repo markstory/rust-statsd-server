@@ -49,10 +49,12 @@ pub fn udp_server(chan: Sender<Event>, port: u16) {
         socket.framed(LineCodec).split();
 
     let stream = stream.for_each(|(_addr, msg)| {
-        let _ = chan.send(Event::UdpMessage(Vec::from(msg)));
+        let res = chan.send(Event::UdpMessage(Vec::from(msg)));
+        res.expect("Cannot send udp message to channel");
         future::ok(())
     });
-    let _ = core.run(stream);
+    let res = core.run(stream);
+    res.expect("Udp metrics socket failed");
 }
 
 /// Setup the TCP socket that listens for management commands.

@@ -91,7 +91,8 @@ impl Statsd {
 impl Backend for Statsd {
     fn flush_buckets(&mut self, buckets: &Buckets) {
         for packet in self.format_stats(buckets) {
-            let _ = self.socket.send(packet.as_bytes());
+            let result = self.socket.send(packet.as_bytes());
+            result.expect("Flushing to other statsd backend failed");
         }
     }
 }
