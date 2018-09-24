@@ -6,9 +6,10 @@ use std::net::UdpSocket;
 pub struct Statsd {
     socket: UdpSocket,
     packet_limit: usize,
+    remote_statsd: String,
 }
 
-fn get_new_socket() -> UdpSocket {
+fn open_new_udp_port() -> UdpSocket {
     let mut port = 12000;
     let mut result = None;
     while result.is_none() {
@@ -22,6 +23,15 @@ fn get_new_socket() -> UdpSocket {
     result.unwrap()
 }
 
+fn open_new_udp_connection(address: String) -> UdpSocket {
+    let socket = open_new_udp_port();
+
+    socket.set_nonblocking(true).expect("Cannot turn on the non blocking mode");
+    socket.connect(address)
+        .expect("Could not connect to remote statsd instance");
+    socket
+}
+
 impl Statsd {
     /// Create a Statsd that sends aggregated metrics to other statsd instance
     ///
@@ -31,15 +41,10 @@ impl Statsd {
     /// let cons = Statsd::new("127.0.0.1", 8125, 1024);
     /// ```
     pub fn new(statsd_host: &str, statsd_port: u16, packet_limit: usize) -> Statsd {
-        let socket = get_new_socket();
-
         let remote_statsd = format!("{}:{}", statsd_host, statsd_port);
-
-        socket.set_nonblocking(true).expect("Cannot turn on the non blocking mode");
-        socket.connect(remote_statsd)
-            .expect("Could not connect to remote statsd instance");
         Statsd {
-            socket: socket,
+            socket: open_new_udp_connection(remote_statsd.clone()),
+            remote_statsd: remote_statsd,
             packet_limit: packet_limit,
         }
     }
@@ -92,7 +97,13 @@ impl Backend for Statsd {
     fn flush_buckets(&mut self, buckets: &Buckets) {
         for packet in self.format_stats(buckets) {
             let result = self.socket.send(packet.as_bytes());
-            result.expect("Flushing to other statsd backend failed");
+            match result {
+                Err(e) => {
+                    eprintln!("Failed to send udp packet, reopening connection: {:?}", e);
+                    self.socket = open_new_udp_connection(self.remote_statsd.clone());
+                }
+                Ok(_) => {}
+            }
         }
     }
 }
