@@ -26,7 +26,6 @@ mod backends {
     pub mod statsd;
 }
 
-
 fn main() {
     let args = cli::parse_args();
 
@@ -59,6 +58,11 @@ fn main() {
     println!("Admin server on {}:{}",
              args.flag_admin_host,
              args.flag_admin_port);
+
+    std::panic::set_hook(Box::new(|err| {
+        eprintln!("Panic error {:?}, exiting program.", err);
+        std::process::exit(77);
+    }));
 
     // Setup the UDP server which publishes events to the event channel
     let port = args.flag_port;
