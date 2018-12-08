@@ -9,6 +9,7 @@ extern crate docopt;
 
 use std::thread;
 use std::sync::mpsc::channel;
+use std::sync::{Arc, Mutex};
 use std::str;
 
 
@@ -51,6 +52,7 @@ fn main() {
     let tcp_send = event_send.clone();
 
     let mut buckets = buckets::Buckets::new();
+    let buckets_snapshot = Arc::new(Mutex::new(buckets.clone()));
 
     println!("Starting statsd - {}",
              time::at(buckets.start_time()).rfc822().to_string());
@@ -97,6 +99,9 @@ fn main() {
                     backend.flush_buckets(&buckets);
                 }
                 buckets.reset();
+
+                let snapshot = buckets.clone();
+                *buckets_snapshot.lock().unwrap() = snapshot
             }
 
             server::Event::UdpMessage(buf) => {
@@ -120,7 +125,10 @@ fn main() {
             }
 
             server::Event::TcpMessage(stream) => {
-                management::exec(stream, &mut buckets);
+                let cl_mutex = buckets_snapshot.clone();
+                thread::spawn(move || {
+                    management::exec(stream, cl_mutex);
+                });
             }
         }
     }
