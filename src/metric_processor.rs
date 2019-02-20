@@ -30,10 +30,12 @@ pub fn process(buckets: &mut Buckets) {
 
             let median = percentile(&v, 0.5);
             let upper_90 = percentile(&v, 0.90);
+            let count_per_second = len as f64 / buckets.flush_interval();
 
             timer_data.insert(format!("{}.min", key), v[0]);
             timer_data.insert(format!("{}.max", key), v[v.len() - 1]);
             timer_data.insert(format!("{}.count", key), len);
+            timer_data.insert(format!("{}.count_ps", key), count_per_second as f64);
             timer_data.insert(format!("{}.mean", key), mean);
             timer_data.insert(format!("{}.median", key), median);
             timer_data.insert(format!("{}.stddev", key), stddev);

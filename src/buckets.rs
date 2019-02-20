@@ -21,6 +21,7 @@ pub struct Buckets {
     last_message: time::Timespec,
     bad_messages: usize,
     total_messages: usize,
+    flush_interval_seconds: f64,
 }
 
 impl Buckets {
@@ -33,7 +34,7 @@ impl Buckets {
     /// let bucket = Buckets::new();
     /// assert_eq!(0, bucket.counters().len());
     /// ```
-    pub fn new() -> Buckets {
+    pub fn new(flush_interval_seconds: f64) -> Buckets {
         Buckets {
             counters: HashMap::new(),
             gauges: HashMap::new(),
@@ -43,6 +44,7 @@ impl Buckets {
             total_messages: 0,
             last_message: time::get_time(),
             server_start_time: time::get_time(),
+            flush_interval_seconds: flush_interval_seconds,
         }
     }
 
@@ -149,6 +151,10 @@ impl Buckets {
         metric_processor::process(self)
     }
 
+    pub fn flush_interval(&self) -> f64 {
+        self.flush_interval_seconds
+    }
+
     pub fn clone(&self) -> Buckets {
         Buckets {
             counters: self.counters.clone(),
@@ -159,6 +165,7 @@ impl Buckets {
             total_messages: self.total_messages,
             last_message: self.last_message,
             server_start_time: self.server_start_time,
+            flush_interval_seconds: self.flush_interval_seconds,
         }
     }
 }

@@ -51,7 +51,7 @@ fn main() {
     let udp_send = event_send.clone();
     let tcp_send = event_send.clone();
 
-    let mut buckets = buckets::Buckets::new();
+    let mut buckets = buckets::Buckets::new(args.flag_flush_interval as f64);
     let buckets_snapshot = Arc::new(Mutex::new(buckets.clone()));
 
     println!("Starting statsd - {}",
