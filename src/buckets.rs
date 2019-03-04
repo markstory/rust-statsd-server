@@ -22,6 +22,7 @@ pub struct Buckets {
     bad_messages: usize,
     total_messages: usize,
     flush_interval_seconds: f64,
+    delete_gauges_after_flush: bool,
 }
 
 impl Buckets {
@@ -34,7 +35,7 @@ impl Buckets {
     /// let bucket = Buckets::new();
     /// assert_eq!(0, bucket.counters().len());
     /// ```
-    pub fn new(flush_interval_seconds: f64) -> Buckets {
+    pub fn new(flush_interval_seconds: f64, delete_gauges: bool) -> Buckets {
         Buckets {
             counters: HashMap::new(),
             gauges: HashMap::new(),
@@ -45,6 +46,7 @@ impl Buckets {
             last_message: time::get_time(),
             server_start_time: time::get_time(),
             flush_interval_seconds: flush_interval_seconds,
+            delete_gauges_after_flush: delete_gauges,
         }
     }
 
@@ -142,6 +144,9 @@ impl Buckets {
         for (_, value) in self.timers.iter_mut() {
             *value = Vec::new();
         }
+        if self.delete_gauges_after_flush {
+            self.gauges.clear();
+        }
         self.bad_messages = 0;
         self.total_messages = 0;
     }
@@ -166,6 +171,7 @@ impl Buckets {
             last_message: self.last_message,
             server_start_time: self.server_start_time,
             flush_interval_seconds: self.flush_interval_seconds,
+            delete_gauges_after_flush: self.delete_gauges_after_flush,
         }
     }
 }

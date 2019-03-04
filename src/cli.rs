@@ -27,6 +27,7 @@ Options:
   --statsd-port=<p>              The port other statsd is running on. [default: 8125].
   --statsd-host=<p>              The host other statsd is running on. [default: 127.0.0.1].
   --statsd-packet-size=<p>       The maximum statsd packet size that will be sent [default: 16384].
+  --delete-gauges                Delete gauges after flush. Default sents the old value.
 ";
 
 /// Holds the parsed command line arguments
@@ -48,6 +49,7 @@ pub struct Args {
     pub flag_statsd_port: u16,
     pub flag_statsd_host: String,
     pub flag_statsd_packet_size: usize,
+    pub flag_delete_gauges: bool,
     pub flag_help: bool,
 }
 
