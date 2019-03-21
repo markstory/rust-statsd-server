@@ -24,8 +24,9 @@ Options:
   --admin-host=<p>               The host to bind the management server on. [default: 127.0.0.1].
   --admin-port=<p>               The port to bind the management server to. [default: 8126].
   --statsd                       Enable the statsd backend.
-  --statsd-port=<p>              The port other statsd is running on. [default: 8125].
-  --statsd-host=<p>              The host other statsd is running on. [default: 127.0.0.1].
+  --statsd-port=<p>              DEPRECATED The port other statsd is running on. [default: 0].
+  --statsd-host=<p>              DEPRECATED The host other statsd is running on. [default: 127.0.0.1].
+  --statsd-hosts=<p>             Other statsd hosts with ports, separated by comma. [default: 127.0.0.1:8125].
   --statsd-packet-size=<p>       The maximum statsd packet size that will be sent [default: 16384].
   --delete-gauges                Delete gauges after flush. Default sents the old value.
 ";
@@ -48,6 +49,7 @@ pub struct Args {
     pub flag_statsd: bool,
     pub flag_statsd_port: u16,
     pub flag_statsd_host: String,
+    pub flag_statsd_hosts: String,
     pub flag_statsd_packet_size: usize,
     pub flag_delete_gauges: bool,
     pub flag_help: bool,

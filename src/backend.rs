@@ -28,6 +28,7 @@ pub fn factory(console: &bool,
                statsd: &bool,
                statsd_host: &str,
                statsd_port: &u16,
+               statsd_hosts: &str,
                statsd_packet_limit: &usize)
                -> Box<[Box<Backend>]> {
     let mut backends: Vec<Box<Backend>> = Vec::with_capacity(2);
@@ -43,8 +44,22 @@ pub fn factory(console: &bool,
         )));
     }
     if *statsd {
+        let mut hosts = "".to_string();
+        let stats_deprecated_host = format!("{}:{},", statsd_host, statsd_port);
+        if stats_deprecated_host != "127.0.0.1:0," {
+            eprintln!("--statsd-host and --statsd-port flags are deprecated, please use --statsd-hosts instead.");
+            hosts += &stats_deprecated_host;
+        }
+        hosts += &*statsd_hosts;
+        let mut hosts_vec: Vec<String> =
+            hosts
+            .split(",").map(|host| host.trim().to_string())
+            .filter(|host| !host.is_empty())
+            .collect();
+        hosts_vec.sort();
+        hosts_vec.dedup();
         backends.push(Box::new(statsd::Statsd::new(
-            statsd_host, *statsd_port, *statsd_packet_limit
+            hosts_vec, *statsd_packet_limit
         )))
     }
     backends.into_boxed_slice()

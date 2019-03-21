@@ -3,10 +3,15 @@ use super::super::buckets::Buckets;
 use std::net::UdpSocket;
 
 #[derive(Debug)]
-pub struct Statsd {
+struct StatsdConnection {
     socket: UdpSocket,
-    packet_limit: usize,
     remote_statsd: String,
+}
+
+#[derive(Debug)]
+pub struct Statsd {
+    packet_limit: usize,
+    connections: Vec<StatsdConnection>,
 }
 
 fn open_new_udp_port() -> UdpSocket {
@@ -40,11 +45,16 @@ impl Statsd {
     /// ```
     /// let cons = Statsd::new("127.0.0.1", 8125, 1024);
     /// ```
-    pub fn new(statsd_host: &str, statsd_port: u16, packet_limit: usize) -> Statsd {
-        let remote_statsd = format!("{}:{}", statsd_host, statsd_port);
+    pub fn new(statsd_hosts: Vec<String>, packet_limit: usize) -> Statsd {
+        let connections = statsd_hosts.iter().map(|host| {
+            println!("Opening socket to another statsd server {}", host);
+            StatsdConnection {
+                socket: open_new_udp_connection(host.clone()),
+                remote_statsd: host.clone(),
+            }
+        }).collect();
         Statsd {
-            socket: open_new_udp_connection(remote_statsd.clone()),
-            remote_statsd: remote_statsd,
+            connections: connections,
             packet_limit: packet_limit,
         }
     }
@@ -96,13 +106,16 @@ impl Statsd {
 impl Backend for Statsd {
     fn flush_buckets(&mut self, buckets: &Buckets) {
         for packet in self.format_stats(buckets) {
-            let result = self.socket.send(packet.as_bytes());
-            match result {
-                Err(e) => {
-                    eprintln!("Failed to send udp packet, reopening connection: {:?}", e);
-                    self.socket = open_new_udp_connection(self.remote_statsd.clone());
+            for i in 0..self.connections.len() {
+                let connection = &mut self.connections[i];
+                let result = connection.socket.send(packet.as_bytes());
+                match result {
+                    Err(e) => {
+                        eprintln!("Failed to send udp packet, reopening connection: {:?}", e);
+                        connection.socket = open_new_udp_connection(connection.remote_statsd.clone());
+                    }
+                    Ok(_) => {}
                 }
-                Ok(_) => {}
             }
         }
     }

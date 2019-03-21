@@ -43,6 +43,7 @@ fn main() {
         &args.flag_statsd,
         &args.flag_statsd_host,
         &args.flag_statsd_port,
+        &args.flag_statsd_hosts,
         &args.flag_statsd_packet_size
     );
 
