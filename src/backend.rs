@@ -81,7 +81,8 @@ mod test {
             "gauges",
             "timers",
             "127.0.0.1", &2300,
-            &false, &"", &0, &0
+            &false, &"", &0,
+            "", &1024
         );
         assert_eq!(1, backends.len());
     }
@@ -97,7 +98,8 @@ mod test {
             "gauges",
             "timers",
             "127.0.0.1", &2300,
-            &false, &"", &0, &0
+            &false, &"", &0,
+            "", &1024
         );
         assert_eq!(1, backends.len());
     }
@@ -113,7 +115,8 @@ mod test {
             "gauges",
             "timers",
             "127.0.0.1", &2300,
-            &true, &"127.0.0.1", &8125, &(16 * 1024)
+            &true, &"127.0.0.1", &8125,
+            "", &(16 * 1024)
         );
         assert_eq!(1, backends.len());
     }
@@ -129,7 +132,8 @@ mod test {
             "gauges",
             "timers",
             "127.0.0.1", &2300,
-            &false, &"", &0, &0
+            &false, &"", &0,
+            "", &0
         );
         assert_eq!(2, backends.len());
     }

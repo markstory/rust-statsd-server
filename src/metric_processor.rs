@@ -74,7 +74,7 @@ mod test {
     use super::super::metric::{Metric, MetricKind};
 
     fn make_buckets() -> Buckets {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., true);
 
         let metrics = [Metric::new("some.timer", 13.1, MetricKind::Timer),
                        Metric::new("some.timer", 33.7, MetricKind::Timer),

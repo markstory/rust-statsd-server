@@ -187,7 +187,7 @@ mod test {
 
     #[test]
     fn test_bad_messages() {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., true);
         buckets.add_bad_message();
         assert_eq!(1, buckets.bad_messages());
         assert_eq!(1, buckets.total_messages());
@@ -199,7 +199,7 @@ mod test {
 
     #[test]
     fn test_add_increments_total_messages() {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., true);
         // duff value to ensure it changes.
         let original = time::strptime("2015-08-03 19:50:12", "%Y-%m-%d %H:%M:%S")
                            .unwrap()
@@ -213,7 +213,7 @@ mod test {
 
     #[test]
     fn test_add_increments_last_message_timer() {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., true);
         let metric = Metric::new("some.metric", 1.0, MetricKind::Counter(1.0));
         buckets.add(&metric);
         assert_eq!(1, buckets.total_messages);
@@ -224,7 +224,7 @@ mod test {
 
     #[test]
     fn test_add_counter_metric() {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., true);
         let metric = Metric::new("some.metric", 1.0, MetricKind::Counter(1.0));
         buckets.add(&metric);
 
@@ -241,7 +241,7 @@ mod test {
 
     #[test]
     fn test_add_counter_metric_sampled() {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., true);
         let metric = Metric::new("some.metric", 1.0, MetricKind::Counter(0.1));
 
         buckets.add(&metric);
@@ -254,7 +254,7 @@ mod test {
 
     #[test]
     fn test_add_gauge_metric() {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., true);
         let metric = Metric::new("some.metric", 11.5, MetricKind::Gauge);
         buckets.add(&metric);
         assert!(buckets.gauges.contains_key("some.metric"),
@@ -266,7 +266,7 @@ mod test {
 
     #[test]
     fn test_modify_gauge_metric() {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., true);
         let metric_a = Metric::new("some.metric", 111.5, MetricKind::Gauge);
         let metric_b = Metric::new("some.metric", -11.5, MetricKind::GaugeDelta);
         let metric_c = Metric::new("some.metric", 20.0, MetricKind::GaugeDelta);
@@ -279,7 +279,7 @@ mod test {
 
     #[test]
     fn test_add_timer_metric() {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., true);
         let metric = Metric::new("some.metric", 11.5, MetricKind::Timer);
         buckets.add(&metric);
         assert!(buckets.timers.contains_key("some.metric"),
@@ -302,7 +302,7 @@ mod test {
 
     #[test]
     fn test_reset_metrics() {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., false);
         buckets.add(&Metric::new("some.timer", 11.5, MetricKind::Timer));
         buckets.add(&Metric::new("some.counter", 14.9, MetricKind::Counter(1.0)));
         buckets.add(&Metric::new("some.gauge", 0.9, MetricKind::Gauge));

@@ -128,7 +128,7 @@ mod test {
     use super::*;
 
     fn make_buckets() -> Buckets {
-        let mut buckets = Buckets::new();
+        let mut buckets = Buckets::new(0., true);
         let m1 = Metric::new("test.counter", 1.0, MetricKind::Counter(1.0));
         let m2 = Metric::new("test.gauge", 3.211, MetricKind::Gauge);
 
@@ -178,7 +178,7 @@ mod test {
         let result = graphite.format_stats(&buckets);
         let lines: Vec<&str> = result.lines().collect();
 
-        assert_eq!(12, lines.len());
+        assert_eq!(13, lines.len());
 
         assert!(result.contains("stats.timers.test.timer.max 12.101"));
         assert!(result.contains("stats.timers.test.timer.min 1.101"));
