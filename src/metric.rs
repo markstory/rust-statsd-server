@@ -7,7 +7,6 @@ use std::fmt;
 pub enum MetricKind {
     Counter(f64), // sample rate
     Gauge,
-    GaugeDelta,
     Timer,
 }
 
@@ -15,7 +14,6 @@ impl fmt::Debug for MetricKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             MetricKind::Gauge => write!(f, "Gauge"),
-            MetricKind::GaugeDelta => write!(f, "GaugeDelta"),
             MetricKind::Timer => write!(f, "Timer"),
             MetricKind::Counter(s) => write!(f, "Counter(s={})", s),
         }
@@ -97,12 +95,10 @@ impl Metric {
             name = &name[1..name.len() - 1];
         }
 
-        let unsigned;
         // Get the float val
         let value = match line[idx..].find('|') {
             Some(pos) => {
                 let start = idx;
-                unsigned = &line[start..start + 1] != "+" && &line[start..start + 1] != "-";
                 idx += pos + 1;
                 match line[start..idx - 1].parse::<f64>() {
                     Ok(value) => value,
@@ -125,9 +121,7 @@ impl Metric {
         // to get types to match
         let kind = match &*kind_name {
             "ms" => MetricKind::Timer,
-            "g" => {
-                if unsigned { MetricKind::Gauge } else { MetricKind::GaugeDelta }
-            },
+            "g" => MetricKind::Gauge,
             "c" => {
                 let rate: f64 = match line[idx..].find('@') {
                     Some(pos) => {

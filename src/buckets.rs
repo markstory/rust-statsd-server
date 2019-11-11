@@ -73,10 +73,6 @@ impl Buckets {
             MetricKind::Gauge => {
                 self.gauges.insert(name, value.value);
             }
-            MetricKind::GaugeDelta => {
-                let gauge = self.gauges.entry(name).or_insert(0.0);
-                *gauge = *gauge + value.value;
-            }
             MetricKind::Timer => {
                 let slot = self.timers.entry(name).or_insert(Vec::new());
                 slot.push(value.value);
@@ -262,19 +258,6 @@ mod test {
         assert_eq!(Some(&11.5), buckets.gauges.get("some.metric"));
         assert_eq!(1, buckets.gauges().len());
         assert_eq!(0, buckets.counters().len());
-    }
-
-    #[test]
-    fn test_modify_gauge_metric() {
-        let mut buckets = Buckets::new(0., true);
-        let metric_a = Metric::new("some.metric", 111.5, MetricKind::Gauge);
-        let metric_b = Metric::new("some.metric", -11.5, MetricKind::GaugeDelta);
-        let metric_c = Metric::new("some.metric", 20.0, MetricKind::GaugeDelta);
-        buckets.add(&metric_a);
-        buckets.add(&metric_b);
-        assert_eq!(Some(&100.0), buckets.gauges.get("some.metric"));
-        buckets.add(&metric_c);
-        assert_eq!(Some(&120.0), buckets.gauges.get("some.metric"));
     }
 
     #[test]
