@@ -10,7 +10,7 @@ compatible as possible with etsy/statsd.
 # Building the application
 
 1. Clone the repository.
-2. Run `make install`.
+2. Run `cargo build --release`.
 3. The generated binary will be in `dist/statsd`.
 
 # Running tests
@@ -20,7 +20,7 @@ integration tests. The integration tests require python 2.7 and that port 8125
 be free on your system.
 
 ```
-make test
+cargo test
 ```
 
 Will run both the unit and integration tests.

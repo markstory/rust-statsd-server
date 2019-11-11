@@ -4,13 +4,7 @@ rust:
     - stable
     - beta
 
-install:
-    - sudo pip install virtualenv
-
-script: make test
-
-# Need sudo as python is root owned in rust builders
-sudo: true
+script: cargo test
 
 notifications:
     email: false

@@ -30,8 +30,8 @@ pub fn factory(console: &bool,
                statsd_port: &u16,
                statsd_hosts: &str,
                statsd_packet_limit: &usize)
-               -> Box<[Box<Backend>]> {
-    let mut backends: Vec<Box<Backend>> = Vec::with_capacity(2);
+               -> Box<[Box<dyn Backend>]> {
+    let mut backends: Vec<Box<dyn Backend>> = Vec::with_capacity(2);
     if *console {
         backends.push(Box::new(console::Console::new()));
     }
