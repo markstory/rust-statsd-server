@@ -30,6 +30,8 @@ pub fn process(buckets: &mut Buckets) {
 
             let median = percentile(&v, 0.5);
             let upper_90 = percentile(&v, 0.90);
+            let upper_95 = percentile(&v, 0.95);
+            let upper_99 = percentile(&v, 0.99);
             let count_per_second = len as f64 / buckets.flush_interval();
 
             timer_data.insert(format!("{}.min", key), v[0]);
@@ -40,6 +42,8 @@ pub fn process(buckets: &mut Buckets) {
             timer_data.insert(format!("{}.median", key), median);
             timer_data.insert(format!("{}.stddev", key), stddev);
             timer_data.insert(format!("{}.upper_90", key), upper_90);
+            timer_data.insert(format!("{}.upper_95", key), upper_95);
+            timer_data.insert(format!("{}.upper_99", key), upper_99);
         }
     }
     buckets.set_timer_data(timer_data);
@@ -78,7 +82,41 @@ mod test {
 
         let metrics = [Metric::new("some.timer", 13.1, MetricKind::Timer),
                        Metric::new("some.timer", 33.7, MetricKind::Timer),
+                       Metric::new("some.timer", 34.7, MetricKind::Timer),
                        Metric::new("some.timer", 3.4, MetricKind::Timer),
+                       Metric::new("some.timer", 1.4, MetricKind::Timer),
+                       Metric::new("some.timer", 0.7, MetricKind::Timer),
+                       Metric::new("some.timer", 5.6, MetricKind::Timer),
+                       Metric::new("some.timer", 1.4, MetricKind::Timer),
+                       Metric::new("some.timer", 24.5, MetricKind::Timer),
+                       Metric::new("some.timer", 0.7, MetricKind::Timer),
+                       Metric::new("some.timer", 5.6, MetricKind::Timer),
+                       Metric::new("some.timer", 9.4, MetricKind::Timer),
+                       Metric::new("some.timer", 0.7, MetricKind::Timer),
+                       Metric::new("some.timer", 3.6, MetricKind::Timer),
+                       Metric::new("some.timer", 6.7, MetricKind::Timer),
+                       Metric::new("some.timer", 6.3, MetricKind::Timer),
+                       Metric::new("some.timer", 4.3, MetricKind::Timer),
+                       Metric::new("some.timer", 6.1, MetricKind::Timer),
+                       Metric::new("some.timer", 0.7, MetricKind::Timer),
+                       Metric::new("some.timer", 3.7, MetricKind::Timer),
+                       Metric::new("some.timer", 3.4, MetricKind::Timer),
+                       Metric::new("some.timer", 1.4, MetricKind::Timer),
+                       Metric::new("some.timer", 0.7, MetricKind::Timer),
+                       Metric::new("some.timer", 5.6, MetricKind::Timer),
+                       Metric::new("some.timer", 1.4, MetricKind::Timer),
+                       Metric::new("some.timer", 24.5, MetricKind::Timer),
+                       Metric::new("some.timer", 0.7, MetricKind::Timer),
+                       Metric::new("some.timer", 5.6, MetricKind::Timer),
+                       Metric::new("some.timer", 9.4, MetricKind::Timer),
+                       Metric::new("some.timer", 0.7, MetricKind::Timer),
+                       Metric::new("some.timer", 3.6, MetricKind::Timer),
+                       Metric::new("some.timer", 6.7, MetricKind::Timer),
+                       Metric::new("some.timer", 6.3, MetricKind::Timer),
+                       Metric::new("some.timer", 4.3, MetricKind::Timer),
+                       Metric::new("some.timer", 6.1, MetricKind::Timer),
+                       Metric::new("some.timer", 0.7, MetricKind::Timer),
+                       Metric::new("some.timer", 3.7, MetricKind::Timer),
                        Metric::new("some.timer", 12.1, MetricKind::Timer)];
         for m in metrics.iter() {
             buckets.add(&m);
@@ -95,17 +133,21 @@ mod test {
         let mut buckets = make_buckets();
         process(&mut buckets);
 
-        assert_eq!(Some(&3.4), buckets.timer_data().get("some.timer.min"));
-        assert_eq!(Some(&33.7), buckets.timer_data().get("some.timer.max"));
-        assert_eq!(Some(&4.0), buckets.timer_data().get("some.timer.count"));
-        assert_float("15.575",
+        assert_eq!(Some(&0.7), buckets.timer_data().get("some.timer.min"));
+        assert_eq!(Some(&34.7), buckets.timer_data().get("some.timer.max"));
+        assert_eq!(Some(&38.0), buckets.timer_data().get("some.timer.count"));
+        assert_float("6.926",
                      buckets.timer_data().get("some.timer.mean").unwrap());
-        assert_float("12.600",
+        assert_float("4.300",
                      buckets.timer_data().get("some.timer.median").unwrap());
-        assert_float("11.124",
+        assert_float("8.439",
                      buckets.timer_data().get("some.timer.stddev").unwrap());
-        assert_float("23.400",
+        assert_float("18.800",
                      buckets.timer_data().get("some.timer.upper_90").unwrap());
+        assert_float("29.100",
+                     buckets.timer_data().get("some.timer.upper_95").unwrap());
+        assert_float("34.200",
+                     buckets.timer_data().get("some.timer.upper_99").unwrap());
     }
 
     #[test]

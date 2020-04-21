@@ -178,7 +178,7 @@ mod test {
         let result = graphite.format_stats(&buckets);
         let lines: Vec<&str> = result.lines().collect();
 
-        assert_eq!(13, lines.len());
+        assert_eq!(15, lines.len());
 
         assert!(result.contains("stats.timers.test.timer.max 12.101"));
         assert!(result.contains("stats.timers.test.timer.min 1.101"));
