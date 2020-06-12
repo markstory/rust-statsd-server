@@ -1,5 +1,5 @@
 
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::SyncSender;
 use std::net::{Ipv4Addr, TcpStream, TcpListener, SocketAddrV4};
 use std::net::ToSocketAddrs;
 use std::thread::sleep;
@@ -37,7 +37,7 @@ impl UdpCodec for LineCodec {
 
 /// Setup the UDP socket that listens for metrics and
 /// publishes them into the bucket storage.
-pub fn udp_server(chan: Sender<Event>, port: u16) {
+pub fn udp_server(chan: SyncSender<Event>, port: u16) {
     let mut core = Core::new().unwrap();
     let handle = core.handle();
 
@@ -58,7 +58,7 @@ pub fn udp_server(chan: Sender<Event>, port: u16) {
 }
 
 /// Setup the TCP socket that listens for management commands.
-pub fn admin_server(chan: Sender<Event>, port: u16, host: &str) {
+pub fn admin_server(chan: SyncSender<Event>, port: u16, host: &str) {
     let tcp = TcpListener::bind((host, port)).unwrap();
     for stream in tcp.incoming() {
         match stream {
@@ -74,7 +74,7 @@ pub fn admin_server(chan: Sender<Event>, port: u16, host: &str) {
 /// Publishes an event on the channel every interval
 ///
 /// This message is used to push data from the buckets to the backends.
-pub fn flush_timer_loop(chan: Sender<Event>, interval: u64) {
+pub fn flush_timer_loop(chan: SyncSender<Event>, interval: u64) {
     let duration = Duration::new(interval, 0);
     loop {
         sleep(duration);

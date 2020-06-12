@@ -8,7 +8,7 @@ extern crate time;
 extern crate docopt;
 
 use std::thread;
-use std::sync::mpsc::channel;
+use std::sync::mpsc::sync_channel;
 use std::sync::{Arc, Mutex};
 use std::str;
 
@@ -47,7 +47,7 @@ fn main() {
         &args.flag_statsd_packet_size
     );
 
-    let (event_send, event_recv) = channel();
+    let (event_send, event_recv) = sync_channel(1000000);
     let flush_send = event_send.clone();
     let udp_send = event_send.clone();
     let tcp_send = event_send.clone();
