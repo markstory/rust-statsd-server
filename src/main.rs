@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate serde_derive;
 extern crate tokio_core;
+extern crate threadpool;
 extern crate futures;
 
 extern crate serde;
@@ -11,6 +12,7 @@ use std::thread;
 use std::sync::mpsc::sync_channel;
 use std::sync::{Arc, Mutex};
 use std::str;
+use threadpool::ThreadPool;
 
 
 // Local module imports.
@@ -47,10 +49,11 @@ fn main() {
         &args.flag_statsd_packet_size
     );
 
-    let (event_send, event_recv) = sync_channel(1000000);
+    let (event_send, event_recv) = sync_channel(100000000);
     let flush_send = event_send.clone();
     let udp_send = event_send.clone();
     let tcp_send = event_send.clone();
+    let threadpool_send = event_send.clone();
 
     let mut buckets = buckets::Buckets::new(
         args.flag_flush_interval as f64,
@@ -89,6 +92,8 @@ fn main() {
         server::flush_timer_loop(flush_send, flush_interval);
     });
 
+    let pool = ThreadPool::new(8);
+
     // Main event loop.
     loop {
         let result = match event_recv.recv() {
@@ -110,22 +115,14 @@ fn main() {
 
             server::Event::UdpMessage(buf) => {
                 // Create the metric and push it into the buckets.
-                str::from_utf8(&buf)
-                    .map(|val| {
-                        metric::Metric::parse(&val)
-                            .and_then(|metrics| {
-                                for metric in metrics.iter() {
-                                    buckets.add(&metric);
-                                }
-                                Ok(metrics.len())
-                            })
-                            .or_else(|err| {
-                                buckets.add_bad_message();
-                                Err(err)
-                            })
-                            .ok();
-                    })
-                    .ok();
+                let threadpool_send = threadpool_send.clone();
+                pool.execute(move || {
+                    str::from_utf8(&buf)
+                        .map(|val| {
+                            let res = server::Event::ParsedMetric(metric::Metric::parse(&val));
+                            threadpool_send.send(res).ok();
+                        }).ok();
+                });
             }
 
             server::Event::TcpMessage(stream) => {
@@ -133,6 +130,18 @@ fn main() {
                 thread::spawn(move || {
                     management::exec(stream, cl_mutex);
                 });
+            }
+
+            server::Event::ParsedMetric(metric) => {
+                metric.and_then(|metrics| {
+                    for metric in metrics.iter() {
+                        buckets.add(&metric);
+                    }
+                    Ok(metrics.len())
+                }).or_else(|err| {
+                    buckets.add_bad_message();
+                    Err(err)
+                }).ok();
             }
         }
     }

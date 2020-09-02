@@ -10,6 +10,7 @@ use tokio_core::net::{UdpSocket, UdpCodec};
 use tokio_core::reactor::Core;
 use futures::{Stream};
 use futures::future;
+use metric::{Metric, ParseError};
 
 /// Acceptable event types.
 ///
@@ -17,6 +18,7 @@ pub enum Event {
     UdpMessage(Vec<u8>),
     TcpMessage(TcpStream),
     TimerFlush,
+    ParsedMetric(Result<Vec<Metric>, ParseError>)
 }
 
 pub struct LineCodec;
