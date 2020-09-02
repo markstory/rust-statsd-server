@@ -18,7 +18,7 @@ pub enum Event {
     UdpMessage(Vec<u8>),
     TcpMessage(TcpStream),
     TimerFlush,
-    ParsedMetric(Result<Vec<Metric>, ParseError>)
+    ParsedMetric(Vec<Result<Vec<Metric>, ParseError>>)
 }
 
 pub struct LineCodec;
