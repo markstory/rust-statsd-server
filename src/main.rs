@@ -94,9 +94,6 @@ fn main() {
 
     let pool = ThreadPool::new(32);
 
-    let batching_size = 128;
-    let mut batch: Vec<Vec<u8>> = Vec::with_capacity(batching_size);
-
     // Main event loop.
     loop {
         let result = match event_recv.recv() {
@@ -118,22 +115,14 @@ fn main() {
 
             server::Event::UdpMessage(buf) => {
                 // Create the metric and push it into the buckets.
-                if batch.len() >= batching_size {
-                    let threadpool_send = threadpool_send.clone();
-                    let cloned = batch.clone();
-                    batch.clear();
-                    pool.execute(move || {
-                        let res = cloned.iter().filter_map(|i| {
-                            str::from_utf8(&i)
-                                .map(|val| {
-                                    metric::Metric::parse(&val)
-                                }).ok()
-                        }).collect();
-                        threadpool_send.send(server::Event::ParsedMetric(res)).ok();
-                    });
-                } else {
-                    batch.push(buf);
-                }
+                let threadpool_send = threadpool_send.clone();
+                pool.execute(move || {
+                    str::from_utf8(&buf)
+                        .map(|val| {
+                            let res = server::Event::ParsedMetric(metric::Metric::parse(&val));
+                            threadpool_send.send(res).ok();
+                        }).ok();
+                });
             }
 
             server::Event::TcpMessage(stream) => {
@@ -143,18 +132,16 @@ fn main() {
                 });
             }
 
-            server::Event::ParsedMetric(metrics) => {
-                for metric in metrics {
-                    metric.and_then(|metrics| {
-                        for metric in metrics.iter() {
-                            buckets.add(&metric);
-                        }
-                        Ok(metrics.len())
-                    }).or_else(|err| {
-                        buckets.add_bad_message();
-                        Err(err)
-                    }).ok();
-                }
+            server::Event::ParsedMetric(metric) => {
+                metric.and_then(|metrics| {
+                    for metric in metrics.iter() {
+                        buckets.add(&metric);
+                    }
+                    Ok(metrics.len())
+                }).or_else(|err| {
+                    buckets.add_bad_message();
+                    Err(err)
+                }).ok();
             }
         }
     }
