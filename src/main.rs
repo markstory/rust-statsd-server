@@ -49,7 +49,7 @@ fn main() {
         &args.flag_statsd_packet_size
     );
 
-    let (event_send, event_recv) = sync_channel(100000000);
+    let (event_send, event_recv) = sync_channel(1000000);
     let flush_send = event_send.clone();
     let udp_send = event_send.clone();
     let tcp_send = event_send.clone();
@@ -92,7 +92,7 @@ fn main() {
         server::flush_timer_loop(flush_send, flush_interval);
     });
 
-    let pool = ThreadPool::new(8);
+    let pool = ThreadPool::new(32);
 
     // Main event loop.
     loop {
